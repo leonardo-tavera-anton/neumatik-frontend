@@ -104,9 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
           // wireframe for each widget.
           mainAxisAlignment: .center,
           children: [
-            const Text(
-              'Presionando ando, si presionas el boton se incrementa el contador:',
-            ),
+            const Text('Hola puedes agregar +1 al darle al boton:'),
             Text(
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,

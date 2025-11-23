@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/lista_autopartes_screen.dart';
+import '../screens/listado_autopartes_screen.dart';
 
 void main() {
   // Aseguramos que Flutter esté inicializado antes de correr la app

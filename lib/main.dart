@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../screens/listado_autopartes_screen.dart';
+import 'package:neumatik_frontend/screens/home_screen.dart';
+import '../screens/home_screen.dart';
 
 void main() {
   // Aseguramos que Flutter esté inicializado antes de correr la app
@@ -29,7 +30,7 @@ class MyApp extends StatelessWidget {
       ),
 
       // La pantalla inicial de la aplicación es el listado de autopartes visual
-      home: ListadoAutopartesScreen(),
+      home: HomeScreen(),
 
       // Ocultar la etiqueta de debug en la esquina
       debugShowCheckedModeBanner: false,

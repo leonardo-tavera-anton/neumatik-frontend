@@ -1,39 +1,79 @@
 import 'package:flutter/material.dart';
-import 'package:neumatik_frontend/screens/home_screen.dart';
-import '../screens/home_screen.dart';
+
+// =========================================================
+// 1. IMPORTS DE LAS 5 PANTALLAS
+// Importamos todas las pantallas que forman parte del sistema de rutas.
+// =========================================================
+import 'screens/home_screen.dart'; // RUTA: '/' (Catálogo Principal)
+import 'screens/detalle_publicacion_screen.dart'; // RUTA: '/publicacion' (Detalle con ID)
+import 'screens/carrito_screen.dart'; // RUTA: '/carrito' (Carrito de Compras)
+import 'screens/perfil_screen.dart'; // RUTA: '/perfil' (Perfil/Dashboard)
+import 'screens/ia_reconocimiento_screen.dart'; // RUTA: '/ia-reconocimiento' (Herramienta IA)
 
 void main() {
   // Aseguramos que Flutter esté inicializado antes de correr la app
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  // Correr la aplicación
+  runApp(const NeumatikApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+// Renombramos la clase principal a NeumatikApp
+class NeumatikApp extends StatelessWidget {
+  const NeumatikApp({super.key});
 
-  // Este widget es la raíz de tu aplicación.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // Título que aparece en el gestor de tareas del dispositivo
       title: 'Neumatik Autopartes',
+      debugShowCheckedModeBanner: false,
 
-      // Tema general de la aplicación
+      // =========================================================
+      // 2. CONFIGURACIÓN DEL TEMA
+      // =========================================================
       theme: ThemeData(
-        primarySwatch: Colors.teal, // Color principal de la app
+        primarySwatch: Colors.teal, // Color principal: Teal
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         useMaterial3: true,
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.teal,
-          foregroundColor: Colors.white, // Título de AppBar en blanco
+          foregroundColor: Colors.white, // Títulos y textos en blanco
+          iconTheme: IconThemeData(
+            color: Colors.white,
+          ), // Iconos también blancos
         ),
       ),
 
-      // La pantalla inicial de la aplicación es el listado de autopartes visual
-      home: HomeScreen(),
+      // =========================================================
+      // 3. SISTEMA DE RUTAS (NAVEGACIÓN)
+      // Usamos 'initialRoute' y 'routes' en lugar de la propiedad 'home'.
+      // =========================================================
 
-      // Ocultar la etiqueta de debug en la esquina
-      debugShowCheckedModeBanner: false,
+      // Define la ruta inicial (Catálogo)
+      initialRoute: '/',
+
+      // Define las rutas estáticas (sin argumentos)
+      routes: {
+        '/': (context) => const HomeScreen(),
+        '/carrito': (context) => const CarritoScreen(),
+        '/perfil': (context) => const PerfilScreen(),
+        '/ia-reconocimiento': (context) => const IAReconocimientoScreen(),
+      },
+
+      // Define cómo manejar las rutas dinámicas (esencial para Detalle de Producto)
+      onGenerateRoute: (settings) {
+        // Manejador para la ruta de detalle de publicación, que necesita el ID del producto
+        if (settings.name == '/publicacion') {
+          // Extraemos los argumentos (el ID)
+          final args = settings.arguments as Map<String, dynamic>?;
+          final publicacionId = args?['id'] as String?;
+
+          return MaterialPageRoute(
+            builder: (context) =>
+                DetallePublicacionScreen(publicacionId: publicacionId),
+          );
+        }
+        return null; // Dejamos que Flutter maneje el resto
+      },
     );
   }
 }

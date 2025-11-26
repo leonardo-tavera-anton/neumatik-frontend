@@ -1,0 +1,47 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../models/usuario.dart';
+
+// Usamos la misma URL base
+const String _baseUrl = 'https://neumatik-backend.up.railway.app';
+
+class UsuarioService {
+  // Obtener detalles de un usuario por ID
+  Future<Usuario> fetchUsuario(String id) async {
+    try {
+      final response = await http.get(Uri.parse('$_baseUrl/usuarios/$id'));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        return Usuario.fromJson(data);
+      } else {
+        throw Exception(
+          'Fallo al cargar el usuario. Código: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      throw Exception('Error al obtener el usuario: $e');
+    }
+  }
+
+  // Ejemplo: Simulación de inicio de sesión
+  Future<Usuario> login(String correo, String contrasena) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/auth/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'correo': correo, 'contrasena': contrasena}),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body)['usuario'];
+        // Asumimos que el backend devuelve el objeto Usuario y un token
+        return Usuario.fromJson(data);
+      } else {
+        throw Exception('Error de credenciales o de servidor.');
+      }
+    } catch (e) {
+      throw Exception('Fallo en el proceso de inicio de sesión: $e');
+    }
+  }
+}

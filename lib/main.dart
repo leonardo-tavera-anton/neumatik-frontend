@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 
 // =========================================================
-// 1. IMPORTS DE LAS 5 PANTALLAS
-// Importamos todas las pantallas que forman parte del sistema de rutas.
+// 1. IMPORTS DE AUTENTICACIÓN Y PANTALLAS
 // =========================================================
+import 'package:shared_preferences/shared_preferences.dart'; // Necesario para asegurar la inicialización
+import 'services/auth_service.dart'; // Importamos el servicio de autenticación
+import 'screens/login_screen.dart'; // Importamos la nueva pantalla de Login
+
+// Imports de las 5 pantallas originales
 import 'screens/home_screen.dart'; // RUTA: '/' (Catálogo Principal)
 import 'screens/detalle_publicacion_screen.dart'; // RUTA: '/publicacion' (Detalle con ID)
 import 'screens/carrito_screen.dart'; // RUTA: '/carrito' (Carrito de Compras)
 import 'screens/perfil_screen.dart'; // RUTA: '/perfil' (Perfil/Dashboard)
 import 'screens/ia_reconocimiento_screen.dart'; // RUTA: '/ia-reconocimiento' (Herramienta IA)
 
-void main() {
-  // Aseguramos que Flutter esté inicializado antes de correr la app
+void main() async {
+  // Aseguramos que Flutter esté inicializado antes de correr la app y usar SharedPreferences
   WidgetsFlutterBinding.ensureInitialized();
   // Correr la aplicación
   runApp(const NeumatikApp());
@@ -28,7 +32,7 @@ class NeumatikApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
 
       // =========================================================
-      // 2. CONFIGURACIÓN DEL TEMA
+      // 2. CONFIGURACIÓN DEL TEMA (Se mantiene igual)
       // =========================================================
       theme: ThemeData(
         primarySwatch: Colors.teal, // Color principal: Teal
@@ -44,11 +48,46 @@ class NeumatikApp extends StatelessWidget {
       ),
 
       // =========================================================
-      // 3. SISTEMA DE RUTAS (NAVEGACIÓN)
-      // Usamos 'initialRoute' y 'routes' en lugar de la propiedad 'home'.
+      // 3. SISTEMA DE RUTAS Y VERIFICACIÓN DE SESIÓN (MODIFICADO)
       // =========================================================
 
-      // Define la ruta inicial (Catálogo)
+      // Usamos 'home' para la lógica de verificación inicial de sesión.
+      home: FutureBuilder<bool>(
+        // Verificamos si el usuario ya tiene un token guardado.
+        future: AuthService().isUserLoggedIn(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            // Mientras espera, muestra un splash screen o un indicador de carga
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          // Si el usuario está logueado (tiene un token válido)
+          final bool isLoggedIn = snapshot.data ?? false;
+
+          if (isLoggedIn) {
+            // El usuario ya está autenticado, vamos al sistema de rutas principal.
+            return _AppNavigator();
+          } else {
+            // El usuario NO está autenticado, mostramos la pantalla de login.
+            return const LoginScreen();
+          }
+        },
+      ),
+    );
+  }
+}
+
+// =========================================================
+// WIDGET AUXILIAR PARA EL SISTEMA DE RUTAS
+// (Reutilizamos la lógica original de rutas si el usuario está logueado)
+// =========================================================
+class _AppNavigator extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      // Se mantiene la configuración de rutas
       initialRoute: '/',
 
       // Define las rutas estáticas (sin argumentos)
@@ -59,11 +98,9 @@ class NeumatikApp extends StatelessWidget {
         '/ia-reconocimiento': (context) => const IAReconocimientoScreen(),
       },
 
-      // Define cómo manejar las rutas dinámicas (esencial para Detalle de Producto)
+      // Define cómo manejar las rutas dinámicas
       onGenerateRoute: (settings) {
-        // Manejador para la ruta de detalle de publicación, que necesita el ID del producto
         if (settings.name == '/publicacion') {
-          // Extraemos los argumentos (el ID)
           final args = settings.arguments as Map<String, dynamic>?;
           final publicacionId = args?['id'] as String?;
 
@@ -72,7 +109,7 @@ class NeumatikApp extends StatelessWidget {
                 DetallePublicacionScreen(publicacionId: publicacionId),
           );
         }
-        return null; // Dejamos que Flutter maneje el resto
+        return null;
       },
     );
   }

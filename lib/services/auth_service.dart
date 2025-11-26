@@ -1,23 +1,53 @@
 // lib/services/auth_service.dart
+
 import 'dart:convert';
-import 'dart:io'; // Necesario para SocketException
+import 'dart:io'; // Necesario para SocketException, esencial para manejo de red.
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/usuario_autenticado.dart'; // Asegúrate de tener este modelo
+
+import '../models/usuario.dart'; // Mantenemos el import de Usuario
+import '../models/usuario_autenticado.dart';
 
 class AuthService {
-  // Tu URL base de backend
-  // NOTA: 'https://neumatik-backend.up.railway.app' ya es una URL pública, no necesita IP.
-  final String _baseUrl = 'https://neumatik-backend.up.railway.app';
+  // URL base del backend.
+  static const String _baseUrl = 'https://neumatik-backend.up.railway.app';
+  static const String _tokenKey = 'auth_token';
+
+  // Constantes para endpoints
   final String _loginEndpoint = '/api/auth/login';
   final String _registerEndpoint = '/api/auth/register';
 
-  // Clave de almacenamiento local para el token
-  static const String _tokenKey = 'authToken';
+  // --------------------------------------------------------------------------
+  // LÓGICA DE PERSISTENCIA (SharedPreferences) - Métodos privados
+  // --------------------------------------------------------------------------
 
-  // ====================================================================
-  // 1. Lógica de Registro de Usuario (CORREGIDA)
-  // ====================================================================
+  // Guarda el token en el almacenamiento local
+  Future<void> _saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tokenKey, token);
+  }
+
+  // Obtiene el token del almacenamiento local
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_tokenKey);
+  }
+
+  // Cierra sesión y elimina el token (Método público)
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
+  }
+
+  // Verifica si el usuario tiene un token almacenado (Método público)
+  Future<bool> isUserLoggedIn() async {
+    final token = await _getToken();
+    return token != null;
+  }
+
+  // --------------------------------------------------------------------------
+  // LÓGICA DE REGISTRO
+  // --------------------------------------------------------------------------
 
   Future<UsuarioAutenticado> registerUser({
     required String nombre,
@@ -29,63 +59,53 @@ class AuthService {
   }) async {
     final url = Uri.parse('$_baseUrl$_registerEndpoint');
 
+    final body = jsonEncode({
+      'nombre': nombre,
+      'apellido': apellido,
+      'correo': correo,
+      'contrasena': contrasena,
+      'telefono': telefono,
+      // Usamos 'es_vendedor' según la convención snake_case común en backends.
+      'es_vendedor': esVendedor,
+    });
+
     try {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          // Las claves deben coincidir exactamente con lo que espera tu backend
-          'nombre': nombre,
-          'apellido': apellido,
-          'correo': correo,
-          'contrasena': contrasena,
-          'telefono': telefono,
-          'es_vendedor': esVendedor,
-        }),
+        body: body,
       );
 
       // 1. Manejo de respuesta exitosa (201 Created)
       if (response.statusCode == 201) {
-        try {
-          // Intentamos decodificar el JSON
-          final Map<String, dynamic> responseBody = jsonDecode(response.body);
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
 
-          final usuarioAutenticado = UsuarioAutenticado.fromJson(responseBody);
-          await _saveToken(usuarioAutenticado.token);
-          return usuarioAutenticado;
-        } on FormatException {
-          // Captura el error de sintaxis JSON. Esto es lo que estaba fallando.
-          throw Exception(
-            'Registro exitoso, pero el servidor devolvió un formato JSON inválido.',
-          );
-        }
-      }
-      // 2. Manejo de códigos de error (4xx, 5xx)
-      else {
+        final authResult = UsuarioAutenticado.fromJson(responseBody);
+
+        await _saveToken(authResult.token);
+
+        return authResult;
+      } else {
+        // 2. Manejo de códigos de error (4xx, 5xx)
         String errorDetail =
             'Error desconocido (Código HTTP: ${response.statusCode})';
 
         try {
-          // Intentamos decodificar el JSON de error (si existe)
+          // Intentamos decodificar el JSON de error
           final Map<String, dynamic> responseBody = jsonDecode(response.body);
 
-          // Buscamos los mensajes de error típicos de un backend (msg, detail, error)
+          // Buscamos mensajes de error típicos
           errorDetail =
-              responseBody['msg'] ??
+              responseBody['message'] ??
               responseBody['detail'] ??
               responseBody['error'] ??
               errorDetail;
         } on FormatException {
-          // El servidor devolvió un error (ej. 500) pero el cuerpo NO era JSON (ej. HTML).
-          // Usamos una versión truncada de la respuesta no-JSON.
-          final bodySnippet = response.body.length > 100
-              ? '${response.body.substring(0, 100)}...'
-              : response.body;
+          // El servidor devolvió un error (ej. 500) pero el cuerpo NO era JSON
           errorDetail =
-              'Error del servidor, no es formato JSON. Mensaje: $bodySnippet';
+              'Error del servidor, no es formato JSON. Código: ${response.statusCode}';
         }
 
-        // Lanzamos la excepción para que la UI la muestre
         throw Exception('Fallo al registrar usuario: $errorDetail');
       }
     } on SocketException {
@@ -101,84 +121,62 @@ class AuthService {
     }
   }
 
-  // ====================================================================
-  // 2. Lógica de Inicio de Sesión (Se mantuvo la lógica anterior, ya es funcional)
-  // ====================================================================
+  // --------------------------------------------------------------------------
+  // LÓGICA DE LOGIN
+  // --------------------------------------------------------------------------
 
-  Future<UsuarioAutenticado> login(String correo, String contrasena) async {
+  // Mantenemos la firma con named arguments para compatibilidad con login_screen.dart
+  Future<UsuarioAutenticado> loginUser({
+    required String correo,
+    required String contrasena,
+  }) async {
     final url = Uri.parse('$_baseUrl$_loginEndpoint');
+    final body = jsonEncode({
+      // Usamos 'correo' y 'contrasena' ya que tu código de login_screen las usa
+      // y coincide con la estructura de registro.
+      'correo': correo,
+      'contrasena': contrasena,
+    });
 
     try {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          // Ajusta las claves 'email' y 'password' para que coincidan con tu backend
-          'email': correo,
-          'password': contrasena,
-        }),
+        body: body,
       );
 
-      final Map<String, dynamic> responseBody = jsonDecode(
-        response.body,
-      ); // Asume que el backend devuelve JSON para 200 y 401
+      final Map<String, dynamic> responseBody = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        final usuarioAutenticado = UsuarioAutenticado.fromJson(responseBody);
-        await _saveToken(usuarioAutenticado.token);
-        return usuarioAutenticado;
-      } else if (response.statusCode == 401) {
-        // En este caso, asumimos que responseBody tiene el error, pero el código original ya manejaba el 401
-        throw Exception(
-          'Credenciales inválidas. Por favor, verifica tu correo y contraseña.',
-        );
+        // 200 OK: Inicio de sesión exitoso
+
+        final authResult = UsuarioAutenticado.fromJson(responseBody);
+
+        await _saveToken(authResult.token);
+
+        return authResult;
       } else {
+        // Manejar errores (ej: credenciales inválidas, 401 Unauthorized)
         final errorDetail =
+            responseBody['message'] ??
             responseBody['detail'] ??
-            responseBody['msg'] ??
-            'Error desconocido';
+            responseBody['error'] ??
+            'Credenciales inválidas o error desconocido.';
         throw Exception('Fallo al iniciar sesión: $errorDetail');
       }
+    } on SocketException {
+      // Error de conexión
+      throw Exception(
+        'No se pudo conectar con el servidor para iniciar sesión. Verifica tu conexión.',
+      );
+    } on FormatException {
+      // Error si la respuesta no es JSON (ej. 500 error en el servidor)
+      throw Exception(
+        'Respuesta inesperada del servidor (formato JSON inválido).',
+      );
     } catch (e) {
-      // Se agregó manejo de errores de conexión y formato
-      if (e is FormatException) {
-        throw Exception(
-          'Respuesta inválida del servidor. (Error de formato JSON en login)',
-        );
-      } else if (e is SocketException) {
-        throw Exception(
-          'No se pudo conectar con el servidor para iniciar sesión.',
-        );
-      }
+      // Otros errores
       throw Exception('Ocurrió un error de conexión: ${e.toString()}');
     }
-  }
-
-  // ====================================================================
-  // 3. Gestión del Token (Persistencia)
-  // ====================================================================
-
-  Future<void> _saveToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
-  }
-
-  Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
-  }
-
-  Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-  }
-
-  // ====================================================================
-  // 4. Verificación de Estado de Sesión
-  // ====================================================================
-
-  Future<bool> isUserLoggedIn() async {
-    final token = await getToken();
-    return token != null;
   }
 }

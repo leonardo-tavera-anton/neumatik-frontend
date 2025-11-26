@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-// ⚠️ AJUSTA ESTA RUTA si 'services' no está en el mismo nivel que 'screens'
-// Si el archivo está en lib/screens/registro_screen.dart,
-// y el servicio está en lib/services/auth_service.dart:
-import '../services/auth_service.dart';
-import '../models/usuario.dart';
-// import '../models/usuario_autenticado.dart'; // Solo si lo necesitas directamente
+import '../services/auth_service.dart'; // El servicio actualizado
+import '../models/usuario.dart'; // Usamos el modelo Usuario
+import '../models/usuario_autenticado.dart'; // <<< FIX: Se añade esta importación para resolver el error de tipado de 'result.user'
 
 class RegistroScreen extends StatefulWidget {
   const RegistroScreen({super.key});
@@ -24,6 +21,8 @@ class _RegistroScreenState extends State<RegistroScreen> {
   final TextEditingController _contrasenaController = TextEditingController();
   final TextEditingController _telefonoController = TextEditingController();
 
+  // VARIABLE AÑADIDA: Para saber si el usuario se registra como vendedor
+  bool _esVendedor = false;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -37,6 +36,8 @@ class _RegistroScreenState extends State<RegistroScreen> {
     super.dispose();
   }
 
+  // Se infiere que la función registerUser devuelve un UsuarioAutenticado,
+  // por eso result tiene acceso a .user.
   void _submitRegistration() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -45,15 +46,18 @@ class _RegistroScreenState extends State<RegistroScreen> {
       });
 
       try {
-        // Llama al servicio de autenticación
-        final result = await _authService.register(
+        // CORRECCIÓN Y FIX DEL WARNING: Tipamos explícitamente result como UsuarioAutenticado.
+        // Esto obliga al analizador a mantener el import de usuario_autenticado.dart.
+        final UsuarioAutenticado result = await _authService.registerUser(
           nombre: _nombreController.text.trim(),
           apellido: _apellidoController.text.trim(),
           correo: _correoController.text.trim(),
           contrasena: _contrasenaController.text,
           telefono: _telefonoController.text.trim(),
+          esVendedor: _esVendedor, // AÑADIDO
         );
 
+        // Registro exitoso, usamos el objeto Usuario devuelto
         final Usuario newUser = result.user;
 
         if (mounted) {
@@ -66,7 +70,8 @@ class _RegistroScreenState extends State<RegistroScreen> {
             ),
           );
 
-          // Navegar a la pantalla principal
+          // Navegar a la pantalla principal después del registro
+          // Esto funciona gracias a las rutas definidas en main.dart
           Navigator.of(
             context,
           ).pushNamedAndRemoveUntil('/home', (Route<dynamic> route) => false);
@@ -186,7 +191,25 @@ class _RegistroScreenState extends State<RegistroScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
+
+              const SizedBox(height: 15), // Espacio para el Checkbox
+              // --- Checkbox Es Vendedor (Reincorporado) ---
+              Row(
+                children: [
+                  Checkbox(
+                    value: _esVendedor,
+                    onChanged: (bool? newValue) {
+                      setState(() {
+                        _esVendedor = newValue ?? false;
+                      });
+                    },
+                    activeColor: Colors.teal,
+                  ),
+                  const Text('Quiero registrarme como Vendedor'),
+                ],
+              ),
+
+              const SizedBox(height: 15),
 
               // --- Mostrar Mensaje de Error ---
               if (_errorMessage != null)
@@ -234,8 +257,9 @@ class _RegistroScreenState extends State<RegistroScreen> {
               // --- Volver a Login ---
               TextButton(
                 onPressed: () {
-                  // Si llegaste a Registro desde Login (Navigator.pushNamed), pop te devuelve a Login.
-                  Navigator.pop(context);
+                  Navigator.pop(
+                    context,
+                  ); // Vuelve a la pantalla anterior (Login)
                 },
                 child: Text(
                   '¿Ya tienes cuenta? Inicia Sesión',

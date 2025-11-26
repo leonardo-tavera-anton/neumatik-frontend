@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/publicacion.dart';
-import '../models/foto_publicacion.dart'; // Importado para claridad
+// Importado para claridad
 
 // URL base de tu API (ejemplo)
 const String _baseUrl = 'https://neumatik-backend.up.railway.app';

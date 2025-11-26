@@ -1,63 +1,84 @@
 import 'package:flutter/material.dart';
+// ⚠️ AJUSTA ESTA RUTA si 'services' no está en el mismo nivel que 'screens'
+// Si el archivo está en lib/screens/registro_screen.dart,
+// y el servicio está en lib/services/auth_service.dart:
 import '../services/auth_service.dart';
-import '../models/usuario_autenticado.dart';
+import '../models/usuario.dart';
+// import '../models/usuario_autenticado.dart'; // Solo si lo necesitas directamente
 
 class RegistroScreen extends StatefulWidget {
-  // Simulación de navegación: cuando el registro es exitoso, ir a la pantalla principal
-  final VoidCallback onSuccessfulRegistration;
-
-  const RegistroScreen({Key? key, required this.onSuccessfulRegistration})
-    : super(key: key);
+  const RegistroScreen({super.key});
 
   @override
-  _RegistroScreenState createState() => _RegistroScreenState();
+  State<RegistroScreen> createState() => _RegistroScreenState();
 }
 
 class _RegistroScreenState extends State<RegistroScreen> {
   final _formKey = GlobalKey<FormState>();
   final AuthService _authService = AuthService();
-  bool _isLoading = false;
-  bool _esVendedor = false;
 
-  // Controladores de texto para los campos del formulario
+  // Controladores
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _apellidoController = TextEditingController();
   final TextEditingController _correoController = TextEditingController();
   final TextEditingController _contrasenaController = TextEditingController();
   final TextEditingController _telefonoController = TextEditingController();
 
-  Future<void> _submit() async {
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  @override
+  void dispose() {
+    _nombreController.dispose();
+    _apellidoController.dispose();
+    _correoController.dispose();
+    _contrasenaController.dispose();
+    _telefonoController.dispose();
+    super.dispose();
+  }
+
+  void _submitRegistration() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
+        _errorMessage = null;
       });
 
       try {
-        await _authService.registerUser(
-          nombre: _nombreController.text,
-          apellido: _apellidoController.text,
-          correo: _correoController.text,
+        // Llama al servicio de autenticación
+        final result = await _authService.register(
+          nombre: _nombreController.text.trim(),
+          apellido: _apellidoController.text.trim(),
+          correo: _correoController.text.trim(),
           contrasena: _contrasenaController.text,
-          telefono: _telefonoController.text,
-          esVendedor: _esVendedor,
+          telefono: _telefonoController.text.trim(),
         );
 
-        // Registro exitoso: navega a la siguiente pantalla
-        widget.onSuccessfulRegistration();
+        final Usuario newUser = result.user;
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '✅ Registro exitoso. ¡Bienvenido, ${newUser.nombreCompleto}!',
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Navegar a la pantalla principal
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil('/home', (Route<dynamic> route) => false);
+        }
       } catch (e) {
-        // Mostrar error en un Snackbar
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              e.toString().replaceAll('Exception: ', ''),
-            ), // Muestra el mensaje de error del AuthService
-            backgroundColor: Colors.red,
-          ),
-        );
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
+        // Manejo de la excepción
+        if (mounted) {
+          setState(() {
+            _errorMessage = e.toString().replaceFirst('Exception: ', '');
+            _isLoading = false;
+          });
+        }
       }
     }
   }
@@ -66,122 +87,164 @@ class _RegistroScreenState extends State<RegistroScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Registro de Usuario'),
-        backgroundColor: Colors.blueGrey,
+        title: const Text('Crear Cuenta'),
+        backgroundColor: Colors.teal,
+        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+            children: <Widget>[
               const Text(
-                'Crea tu cuenta Neumatik',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blueGrey,
-                ),
+                'Completa tus datos para empezar a vender y comprar autopartes.',
                 textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, color: Colors.blueGrey),
               ),
-              const SizedBox(height: 20),
-              _buildTextField(
-                _nombreController,
-                'Nombre',
-                validator: (v) => v!.isEmpty ? 'Ingresa tu nombre' : null,
-              ),
-              _buildTextField(_apellidoController, 'Apellido'),
-              _buildTextField(
-                _correoController,
-                'Correo Electrónico',
-                keyboardType: TextInputType.emailAddress,
-                validator: (v) => v!.isEmpty || !v.contains('@')
-                    ? 'Ingresa un correo válido'
+              const SizedBox(height: 25),
+
+              // --- Campo Nombre ---
+              TextFormField(
+                controller: _nombreController,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre',
+                  prefixIcon: Icon(Icons.person_outline, color: Colors.teal),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                  ),
+                ),
+                validator: (value) => value == null || value.isEmpty
+                    ? 'El nombre es obligatorio.'
                     : null,
               ),
-              _buildTextField(
-                _contrasenaController,
-                'Contraseña',
-                obscureText: true,
-                validator: (v) => v!.length < 6 ? 'Mínimo 6 caracteres' : null,
-              ),
-              _buildTextField(
-                _telefonoController,
-                'Teléfono',
-                keyboardType: TextInputType.phone,
-              ),
+              const SizedBox(height: 15),
 
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Checkbox(
-                    value: _esVendedor,
-                    onChanged: (bool? newValue) {
-                      setState(() {
-                        _esVendedor = newValue ?? false;
-                      });
-                    },
-                    activeColor: Colors.teal,
+              // --- Campo Apellido ---
+              TextFormField(
+                controller: _apellidoController,
+                decoration: const InputDecoration(
+                  labelText: 'Apellido',
+                  prefixIcon: Icon(Icons.person_outline, color: Colors.teal),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
-                  const Text('Quiero registrarme como vendedor'),
-                ],
+                ),
+              ),
+              const SizedBox(height: 15),
+
+              // --- Campo Correo ---
+              TextFormField(
+                controller: _correoController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Correo Electrónico',
+                  prefixIcon: Icon(Icons.email_outlined, color: Colors.teal),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'El correo es obligatorio.';
+                  }
+                  if (!value.contains('@') || !value.contains('.')) {
+                    return 'Introduce un correo válido.';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 15),
+
+              // --- Campo Contraseña ---
+              TextFormField(
+                controller: _contrasenaController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Contraseña (mín. 6 caracteres)',
+                  prefixIcon: Icon(Icons.lock_outline, color: Colors.teal),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                  ),
+                ),
+                validator: (value) => value == null || value.length < 6
+                    ? 'La contraseña debe tener al menos 6 caracteres.'
+                    : null,
+              ),
+              const SizedBox(height: 15),
+
+              // --- Campo Teléfono ---
+              TextFormField(
+                controller: _telefonoController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Teléfono (Opcional)',
+                  prefixIcon: Icon(Icons.phone_outlined, color: Colors.teal),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                  ),
+                ),
               ),
               const SizedBox(height: 30),
 
-              _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(color: Colors.teal),
-                    )
-                  : ElevatedButton(
-                      onPressed: _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        'Registrar',
-                        style: TextStyle(fontSize: 18, color: Colors.white),
-                      ),
+              // --- Mostrar Mensaje de Error ---
+              if (_errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 15.0),
+                  child: Text(
+                    'Error: $_errorMessage',
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
                     ),
-              const SizedBox(height: 15),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+
+              // --- Botón de Registro ---
+              ElevatedButton.icon(
+                onPressed: _isLoading ? null : _submitRegistration,
+                icon: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Icon(Icons.person_add),
+                label: Text(_isLoading ? 'Registrando...' : 'Registrar Cuenta'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal.shade600,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // --- Volver a Login ---
               TextButton(
                 onPressed: () {
-                  // Simular navegación a Login (solo para demostración)
-                  Navigator.of(context).pop();
+                  // Si llegaste a Registro desde Login (Navigator.pushNamed), pop te devuelve a Login.
+                  Navigator.pop(context);
                 },
-                child: const Text('¿Ya tienes cuenta? Inicia sesión aquí'),
+                child: Text(
+                  '¿Ya tienes cuenta? Inicia Sesión',
+                  style: TextStyle(color: Colors.blueGrey.shade600),
+                ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildTextField(
-    TextEditingController controller,
-    String label, {
-    TextInputType keyboardType = TextInputType.text,
-    bool obscureText = false,
-    String? Function(String?)? validator,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextFormField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          filled: true,
-          fillColor: Colors.white,
-        ),
-        keyboardType: keyboardType,
-        obscureText: obscureText,
-        validator: validator ?? (value) => null,
       ),
     );
   }

@@ -158,10 +158,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       fillColor: Colors.teal.shade50,
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty)
+                      if (value == null || value.isEmpty) {
                         return 'El correo es obligatorio.';
-                      if (!value.contains('@'))
+                      }
+                      if (!value.contains('@')) {
                         return 'Ingresa un correo válido.';
+                      }
                       return null;
                     },
                   ),

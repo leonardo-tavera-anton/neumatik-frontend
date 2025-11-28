@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/publicacion_autoparte.dart';
 import '../main.dart'; // Importamos para usar el navigatorKey en caso de sesión expirada
 
+import 'dart:io'; // Necesario para el tipo 'File'
+
 class PublicacionService {
   static const String _baseUrl = 'https://neumatik-backend.up.railway.app';
 
@@ -44,6 +46,104 @@ class PublicacionService {
       }
     } catch (e) {
       throw Exception('Error de conexión: ${e.toString()}');
+    }
+  }
+
+  // FUNCIÓN AÑADIDA: Para crear una nueva publicación.
+  Future<void> crearPublicacion({
+    required String nombreParte,
+    required int idCategoria,
+    required double precio,
+    required String condicion,
+    required int stock,
+    required String ubicacionCiudad,
+    String? numeroOem,
+    String? descripcionCorta,
+    required String
+    fotoUrl, // La URL de la imagen ya subida a un servicio externo.
+  }) async {
+    final token = await _getToken();
+    if (token == null) {
+      throw Exception('No estás autenticado para realizar esta acción.');
+    }
+
+    final url = Uri.parse('$_baseUrl/api/publicaciones');
+
+    final body = jsonEncode({
+      'nombre_parte': nombreParte,
+      'id_categoria': idCategoria,
+      'precio': precio,
+      'condicion': condicion,
+      'stock': stock,
+      'ubicacion_ciudad': ubicacionCiudad,
+      'numero_oem': numeroOem ?? '',
+      'descripcion_corta': descripcionCorta ?? '',
+      'foto_url': fotoUrl,
+    });
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: body,
+      );
+
+      if (response.statusCode != 201) {
+        // Si el backend devuelve un error, lo lanzamos.
+        final errorBody = jsonDecode(response.body);
+        throw Exception(
+          errorBody['message'] ?? 'Error desconocido del servidor.',
+        );
+      }
+      // Si es 201, la operación fue exitosa y no necesitamos hacer más.
+    } catch (e) {
+      throw Exception('Fallo al crear la publicación: ${e.toString()}');
+    }
+  }
+
+  // Método privado para obtener el token, para no duplicar código.
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token');
+  }
+
+  // FUNCIÓN AÑADIDA: Para subir la imagen a un servicio externo.
+  // NOTA: Esta es una implementación de EJEMPLO. Necesitarás una cuenta
+  // en un servicio como Cloudinary para obtener una URL real.
+  Future<String> uploadImage(File image) async {
+    // --- IMPLEMENTACIÓN REAL CON CLOUDINARY ---
+
+    // 1. **REEMPLAZA ESTOS VALORES CON LOS TUYOS**
+    const String cloudName = 'dfej71ufs';
+    const String uploadPreset = 'neumatik_uploads';
+
+    // 2. Configura la URL del servicio de Cloudinary.
+    final url = Uri.parse(
+      'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
+    );
+
+    // 3. Crea una petición 'multipart' para poder enviar el archivo.
+    final request = http.MultipartRequest('POST', url)
+      ..fields['upload_preset'] = uploadPreset
+      ..files.add(await http.MultipartFile.fromPath('file', image.path));
+
+    // 4. Envía la petición y espera la respuesta.
+    final streamResponse = await request.send();
+    final response = await http.Response.fromStream(streamResponse);
+
+    if (response.statusCode == 200) {
+      // 5. Si la subida es exitosa, decodifica la respuesta JSON.
+      final responseData = json.decode(response.body);
+      // Cloudinary devuelve la URL en la clave 'secure_url'.
+      return responseData['secure_url'];
+    } else {
+      // Si algo falla, lanza un error.
+      throw Exception(
+        'Fallo al subir la imagen a Cloudinary. Código: ${response.statusCode}',
+      );
     }
   }
 }

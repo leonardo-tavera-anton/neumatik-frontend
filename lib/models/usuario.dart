@@ -56,7 +56,8 @@ class Usuario {
     'nombre': nombre,
     'apellido': apellido, // Aseguramos que el campo se envíe
     'correo': correo,
-    'telefono': telefono,
+    // SIMPLIFICACIÓN: Enviamos el valor directamente. La DB ahora tiene un DEFAULT.
+    'telefono': telefono ?? '',
     // El backend de Node.js/Express.js generalmente prefiere booleanos si está configurado
     'es_vendedor': esVendedor,
   };

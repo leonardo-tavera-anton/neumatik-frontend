@@ -143,13 +143,21 @@ class AuthService {
 
       if (response.statusCode == 200) {
         // 200 OK: Inicio de sesión exitoso
-        // Solo decodificamos y procesamos el cuerpo si la respuesta es exitosa.
-        final Map<String, dynamic> responseBody = jsonDecode(response.body);
-        final authResult = UsuarioAutenticado.fromJson(responseBody);
+        // SOLUCIÓN: Añadimos un try-catch aquí porque el servidor podría enviar
+        // un 200 OK con un cuerpo que no es JSON, causando el error.
+        try {
+          final Map<String, dynamic> responseBody = jsonDecode(response.body);
+          final authResult = UsuarioAutenticado.fromJson(responseBody);
 
-        await _saveToken(authResult.token);
+          await _saveToken(authResult.token);
 
-        return authResult;
+          return authResult;
+        } catch (e) {
+          // Si el servidor envía 200 OK pero el cuerpo no es JSON, lo capturamos.
+          throw Exception(
+            'El servidor dio una respuesta inesperada. Cuerpo: ${response.body}',
+          );
+        }
       } else {
         // Manejo de errores (401, 400, etc.)
         // SOLUCIÓN: Validar si la respuesta tiene cuerpo antes de decodificar.
@@ -215,13 +223,16 @@ class AuthService {
         // Respuesta exitosa
         final Map<String, dynamic> responseBody = jsonDecode(response.body);
 
-        // El backend devuelve { perfil: {...datos_usuario}, mensaje: ... }
+        // El backend devuelve { perfil: {...}, mensaje: ... }
         if (responseBody.containsKey('perfil')) {
-          // Devuelve el mapa con los datos del perfil (id, nombre, correo, etc.)
-          return responseBody['perfil'];
+          // SOLUCIÓN DE CONSISTENCIA:
+          // Para unificar, devolvemos un mapa que usa la clave 'user',
+          // igual que en el login/registro. Así, el resto de la app
+          // siempre espera un 'user'.
+          return {'user': responseBody['perfil']};
         } else {
           throw Exception(
-            'Respuesta de perfil válida, pero falta la clave "perfil".',
+            'La respuesta del servidor para el perfil no tiene el formato esperado (falta la clave "perfil").',
           );
         }
       } else if (response.statusCode == 401 || response.statusCode == 403) {

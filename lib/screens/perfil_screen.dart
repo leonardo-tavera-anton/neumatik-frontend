@@ -71,7 +71,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
             );
           }
 
-          final perfil = snapshot.data!;
+          // Ahora los datos vienen dentro de la clave 'user' para ser consistentes.
+          final perfil = snapshot.data!['user'] as Map<String, dynamic>;
 
           return ListView(
             padding: const EdgeInsets.all(16.0),

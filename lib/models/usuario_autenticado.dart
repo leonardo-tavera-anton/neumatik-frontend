@@ -9,9 +9,9 @@ class UsuarioAutenticado {
   UsuarioAutenticado({required this.token, required this.user});
 
   factory UsuarioAutenticado.fromJson(Map<String, dynamic> json) {
-    // SOLUCIÓN: Validar que el objeto 'user' exista en la respuesta JSON.
-    // Si 'user' es nulo o no es un mapa, se lanza un error controlado.
-    if (json['user'] == null || json['user'] is! Map<String, dynamic>) {
+    // SOLUCIÓN: Se cambia la clave de 'user' a 'usuario' para que coincida con la respuesta del backend.
+    // Si 'usuario' es nulo o no es un mapa, se lanza un error controlado.
+    if (json['usuario'] == null || json['usuario'] is! Map<String, dynamic>) {
       throw const FormatException(
         'La respuesta del servidor no contiene un objeto de usuario válido.',
       );
@@ -19,9 +19,9 @@ class UsuarioAutenticado {
 
     return UsuarioAutenticado(
       token: json['token'] as String,
-      // Se utiliza Usuario.fromJson() para deserializar el objeto anidado 'user'
+      // Se utiliza Usuario.fromJson() para deserializar el objeto anidado 'usuario'
       // Ahora es seguro hacer el cast porque ya lo validamos arriba.
-      user: Usuario.fromJson(json['user'] as Map<String, dynamic>),
+      user: Usuario.fromJson(json['usuario'] as Map<String, dynamic>),
     );
   }
 

@@ -31,6 +31,29 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
     );
   }
 
+  // SOLUCIÓN: Se añade la función que faltaba para manejar la acción de añadir al carrito.
+  void _anadirAlCarrito(PublicacionAutoparte publicacion) async {
+    try {
+      await _carritoService.anadirAlCarrito(publicacion);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('¡Producto añadido al carrito!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al añadir al carrito: ${e.toString()}'),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

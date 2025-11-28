@@ -1,13 +1,39 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart'; // Importa la pantalla de inicio
+import 'package:provider/provider.dart';
+
 import 'screens/login_screen.dart'; // Importa la pantalla de login
 import 'screens/registro_screen.dart'; // Importa la pantalla de registro
+import 'screens/perfil_screen.dart'; // Importa la pantalla de perfil
+import 'screens/carrito_screen.dart'; // Importa la pantalla de carrito
+import 'screens/detalle_publicacion_screen.dart'; // Importa la pantalla de detalle
+import 'screens/listado_autopartes_screen.dart'; // Pantalla real del catálogo
+import 'screens/ia_reconocimiento_screen.dart'; // Pantalla de IA
+
 import 'services/auth_service.dart'; // Importa el servicio de autenticación
+import 'services/data_service.dart'; // Importa el servicio de datos
 
 void main() {
   // Asegura que los servicios de Flutter (como SharedPreferences) estén inicializados
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  runApp(const AppState());
+}
+
+// Widget para gestionar el estado de los servicios
+class AppState extends StatelessWidget {
+  const AppState({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        // Proveemos una única instancia de AuthService a toda la app.
+        Provider<AuthService>(create: (_) => AuthService()),
+        // DataService también se provee para ser accesible globalmente.
+        Provider<DataService>(create: (_) => DataService()),
+      ],
+      child: const MyApp(),
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -35,7 +61,12 @@ class MyApp extends StatelessWidget {
         '/': (context) => const CheckAuthStateScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegistroScreen(),
-        '/home': (context) => const HomeScreen(),
+        '/home': (context) => ListadoAutopartesScreen(), // Usamos la pantalla de listado real
+        '/perfil': (context) => const PerfilScreen(),
+        '/carrito': (context) => const CarritoScreen(),
+        // La ruta de detalle es dinámica, pero la dejamos definida para referencia
+        '/publicacion': (context) => const DetallePublicacionScreen(),
+        '/ia-reconocimiento': (context) => const IAReconocimientoScreen(),
       },
     );
   }
@@ -45,19 +76,21 @@ class MyApp extends StatelessWidget {
 class CheckAuthStateScreen extends StatelessWidget {
   const CheckAuthStateScreen({super.key});
 
-  // Determina la ruta inicial consultando el servicio de autenticación
-  Future<String> _getInitialRoute() async {
-    // Nota: Aunque AuthService se instancia aquí, debe ser un Singleton o usar Provider/Riverpod
-    // en una aplicación real para evitar múltiples instancias. Asumimos que AuthService es ligero.
-    final authService = AuthService();
+  /// Determina la ruta inicial consultando el servicio de autenticación.
+  /// Recibe [authService] para evitar problemas de alcance.
+  Future<String> _getInitialRoute(AuthService authService) async {
     final isLoggedIn = await authService.isUserLoggedIn();
     return isLoggedIn ? '/home' : '/login';
   }
 
   @override
   Widget build(BuildContext context) {
+    // Obtenemos la instancia de AuthService desde el Provider.
+    final authService = context.read<AuthService>();
+
     return FutureBuilder<String>(
-      future: _getInitialRoute(),
+      // Pasamos el servicio al método para que pueda usarlo.
+      future: _getInitialRoute(authService),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           // Si tenemos el resultado, navegamos. Usamos addPostFrameCallback para evitar errores

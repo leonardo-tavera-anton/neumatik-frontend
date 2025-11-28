@@ -146,11 +146,13 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.grey.shade400),
                   ),
-                  child: _imagenSeleccionada != null
+                  child: _imagenEnBytes != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          child: Image.file(
-                            _imagenSeleccionada!,
+                          // SOLUCIÓN: Se elimina el Image.file duplicado y se deja solo Image.memory,
+                          // que funciona tanto en móvil como en web.
+                          child: Image.memory(
+                            _imagenEnBytes!,
                             fit: BoxFit.cover,
                           ),
                         )

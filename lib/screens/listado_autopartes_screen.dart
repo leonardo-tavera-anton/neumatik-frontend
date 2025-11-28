@@ -8,8 +8,6 @@ import '../models/publicacion_autoparte.dart';
 class ListadoAutopartesScreen extends StatelessWidget {
   final DataService apiService = DataService();
 
-  ListadoAutopartesScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,7 +67,7 @@ class ListadoAutopartesScreen extends StatelessWidget {
 class AutoparteCard extends StatelessWidget {
   final PublicacionAutoparte publicacion;
 
-  const AutoparteCard({super.key, required this.publicacion});
+  const AutoparteCard({Key? key, required this.publicacion}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

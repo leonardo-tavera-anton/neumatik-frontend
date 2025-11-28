@@ -1,6 +1,7 @@
 // Este es el archivo de prueba por defecto que necesita ser actualizado
 // para reflejar el nombre de la clase principal de la app (NeumatikApp).
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Importamos la clase principal de nuestra aplicación (NeumatikApp)

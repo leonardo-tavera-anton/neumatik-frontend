@@ -21,7 +21,7 @@ class Usuario {
     required this.esVendedor,
   });
 
-  String get nombreCompleto => '$nombre ${apellido ?? ''}'.trim();
+  String get nombreCompleto => '$nombre ${apellido ?? ''}'.trim(); //no es codigo muerto
 
   // Factory para crear una instancia de Usuario a partir de un mapa JSON
   factory Usuario.fromJson(Map<String, dynamic> json) {

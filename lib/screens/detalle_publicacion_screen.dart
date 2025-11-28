@@ -85,7 +85,7 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Imagen principal
+                //imagen principal subida a cloudinary
                 Image.network(
                   publicacion.fotoPrincipalUrl,
                   height: 300,

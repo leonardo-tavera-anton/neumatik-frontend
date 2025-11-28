@@ -275,4 +275,51 @@ class AuthService {
       );
     }
   }
+
+  // ==========================================================================
+  // LÓGICA PARA ACTUALIZAR PERFIL DE USUARIO
+  // ==========================================================================
+  Future<Map<String, dynamic>> updateUserProfile({
+    required String nombre,
+    required String apellido,
+    required String telefono,
+  }) async {
+    final token = await _getToken();
+    if (token == null) {
+      throw Exception('Usuario no autenticado para actualizar.');
+    }
+
+    final url = Uri.parse(
+      '$_baseUrl$_profileEndpoint',
+    ); // Mismo endpoint de perfil, pero con método PUT
+
+    final body = jsonEncode({
+      'nombre': nombre,
+      'apellido': apellido,
+      'telefono': telefono,
+    });
+
+    try {
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+        // El backend devuelve { perfil: {...} }, lo envolvemos en { user: {...} } para consistencia.
+        return {'user': responseBody['perfil']};
+      } else {
+        throw Exception('Fallo al actualizar el perfil: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception(
+        'Error de conexión al actualizar el perfil: ${e.toString()}',
+      );
+    }
+  }
 }

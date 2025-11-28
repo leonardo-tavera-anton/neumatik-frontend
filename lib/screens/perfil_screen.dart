@@ -43,38 +43,54 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mi Perfil'),
-        backgroundColor: Colors.teal,
-        foregroundColor: Colors.white,
-      ),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _userProfileFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'Error al cargar el perfil: ${snapshot.error.toString().replaceFirst("Exception: ", "")}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.red),
-                ),
+    // SOLUCIÓN: El FutureBuilder ahora envuelve todo el Scaffold.
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _userProfileFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Error al cargar el perfil: ${snapshot.error.toString().replaceFirst("Exception: ", "")}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red),
               ),
-            );
-          } else if (!snapshot.hasData) {
-            return const Center(
-              child: Text('No se encontraron datos del perfil.'),
-            );
-          }
+            ),
+          );
+        } else if (!snapshot.hasData) {
+          return const Center(
+            child: Text('No se encontraron datos del perfil.'),
+          );
+        }
 
-          // Ahora los datos vienen dentro de la clave 'user' para ser consistentes.
-          final perfil = snapshot.data!['user'] as Map<String, dynamic>;
+        // Ahora los datos vienen dentro de la clave 'user' para ser consistentes.
+        final perfil = snapshot.data!['user'] as Map<String, dynamic>;
 
-          return ListView(
+        // Se construye el Scaffold aquí, cuando ya tenemos los datos.
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Mi Perfil'),
+            backgroundColor: Colors.teal,
+            actions: [
+              // Ahora el botón SÍ puede ver la variable 'snapshot'.
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () {
+                  Navigator.pushNamed(
+                    context,
+                    '/edit-perfil',
+                    arguments:
+                        perfil, // Pasamos el mapa del perfil directamente.
+                  );
+                },
+              ),
+            ],
+            foregroundColor: Colors.white,
+          ),
+          body: ListView(
             padding: const EdgeInsets.all(16.0),
             children: [
               const CircleAvatar(
@@ -134,9 +150,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 ),
               ),
             ],
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

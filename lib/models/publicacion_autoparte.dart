@@ -12,6 +12,7 @@ class PublicacionAutoparte {
   final String ubicacionCiudad;
   final String idVendedor; // CAMBIO: Se añade el ID del vendedor.
   final String vendedorNombreCompleto;
+
   final String fotoPrincipalUrl;
   final String? descripcionCorta; // CAMBIO: Se añade la descripción.
   final DateTime fechaPublicacion;
@@ -26,6 +27,7 @@ class PublicacionAutoparte {
     required this.condicion,
     required this.stock,
     required this.ubicacionCiudad,
+
     required this.idVendedor,
     required this.vendedorNombreCompleto,
     required this.fotoPrincipalUrl,
@@ -44,6 +46,7 @@ class PublicacionAutoparte {
     // Manejo de la URL de la foto y conversión de tipos
     return PublicacionAutoparte(
       // SOLUCIÓN: Se añade '?? '' ' para proteger contra valores nulos en campos de texto.
+
       // Esto evita el error 'Null is not a subtype of type String'.
       publicacionId: json['publicacion_id'] as String? ?? '',
       nombreParte: json['nombre_parte'] as String? ?? 'Sin Nombre',
@@ -54,6 +57,7 @@ class PublicacionAutoparte {
       ), //Convierte NUMERIC a String al fin funciona carajo
       condicion: json['condicion'] as String? ?? 'No especificada',
       stock: json['stock'] as int,
+
       idVendedor: json['id_vendedor'] as String? ?? '',
       ubicacionCiudad: json['ubicacion_ciudad'] as String? ?? 'No especificada',
       vendedorNombreCompleto: nombreCompleto,

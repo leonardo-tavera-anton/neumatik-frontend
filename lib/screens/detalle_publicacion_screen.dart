@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/publicacion_autoparte.dart';
-import '../services/auth_service.dart';
 import '../services/carrito_service.dart';
 import '../services/publicacion_service.dart';
 
@@ -19,20 +18,13 @@ class DetallePublicacionScreen extends StatefulWidget {
 
 class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
   final PublicacionService _publicacionService = PublicacionService();
-  final AuthService _authService = AuthService();
   final CarritoService _carritoService =
       CarritoService(); // CAMBIO: Se añade el servicio de carrito.
   late Future<PublicacionAutoparte> _publicacionFuture;
-  // SOLUCIÓN: Se declara la variable que faltaba.
-  String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
-    // Obtenemos el ID del usuario actual para compararlo con el del vendedor.
-    _authService.getCurrentUserId().then((id) {
-      if (mounted) setState(() => _currentUserId = id);
-    });
     // Llamamos al nuevo método para obtener los detalles de la publicación.
     _publicacionFuture = _publicacionService.getPublicacionById(
       widget.publicacionId,
@@ -156,6 +148,22 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
                         ],
                       ),
                       const Divider(height: 32),
+
+                      // CAMBIO: Sección de Descripción
+                      if (publicacion.descripcionCorta != null &&
+                          publicacion.descripcionCorta!.isNotEmpty) ...[
+                        const Text(
+                          'Descripción',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(publicacion.descripcionCorta!),
+                        const Divider(height: 32),
+                      ],
+
                       // Vendedor y Ubicación
                       ListTile(
                         contentPadding: EdgeInsets.zero,
@@ -176,50 +184,17 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
                         subtitle: Text(publicacion.ubicacionCiudad),
                       ),
                       const SizedBox(height: 24),
-                      // CAMBIO: Lógica para mostrar botones de CRUD o de compra.
-                      if (_currentUserId == publicacion.idVendedor)
-                        // Si el usuario es el dueño, muestra los botones de gestión.
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: () {
-                                  /* Lógica para editar */
-                                },
-                                icon: const Icon(Icons.edit_outlined),
-                                label: const Text('Editar'),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: () {
-                                  /* Lógica para eliminar */
-                                },
-                                icon: const Icon(
-                                  Icons.delete_outline,
-                                  color: Colors.red,
-                                ),
-                                label: const Text(
-                                  'Eliminar',
-                                  style: TextStyle(color: Colors.red),
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      else
-                        // Botón de Añadir al Carrito
-                        ElevatedButton.icon(
-                          onPressed: () => _anadirAlCarrito(publicacion),
-                          icon: const Icon(Icons.add_shopping_cart),
-                          label: const Text('Añadir al Carrito'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.teal,
-                            foregroundColor: Colors.white,
-                            minimumSize: const Size(double.infinity, 50),
-                          ),
+                      // Botón de Añadir al Carrito
+                      ElevatedButton.icon(
+                        onPressed: () => _anadirAlCarrito(publicacion),
+                        icon: const Icon(Icons.add_shopping_cart),
+                        label: const Text('Añadir al Carrito'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.teal,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(double.infinity, 50),
                         ),
+                      ),
                     ],
                   ),
                 ),

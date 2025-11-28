@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'screens/carrito_screen.dart';
 import 'screens/home_screen.dart'; // Importa la pantalla de inicio
 import 'screens/crear_publicacion_screen.dart';
+import 'screens/edit_perfil_screen.dart';
 import 'screens/detalle_publicacion_screen.dart';
 import 'screens/ia_reconocimiento_screen.dart';
 import 'screens/login_screen.dart'; // Importa la pantalla de login
@@ -52,6 +53,12 @@ class MyApp extends StatelessWidget {
             const PerfilScreen(), // Pantalla de perfil de usuario.
         '/ia-reconocimiento': (context) => const IAReconocimientoScreen(),
         '/carrito': (context) => const CarritoScreen(),
+        '/edit-perfil': (context) {
+          final perfilActual =
+              ModalRoute.of(context)!.settings.arguments
+                  as Map<String, dynamic>;
+          return EditPerfilScreen(perfil: perfilActual);
+        },
         '/crear-publicacion': (context) => const CrearPublicacionScreen(),
         // 4. RUTA DE DETALLE: Ruta para mostrar el detalle de una publicación.
         // Extrae el ID de los argumentos de la ruta.

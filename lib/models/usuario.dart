@@ -27,7 +27,7 @@ class Usuario {
   factory Usuario.fromJson(Map<String, dynamic> json) {
     // Maneja 'id' o 'user_id' y asegura que sea un String,
     // ya sea que venga como String o int del backend.
-    final rawId = json['id'] ?? json['user_id'] ?? json['usuario_id'];
+    final rawId = json['id'] ?? json['user_id'];
     final idString = rawId != null ? rawId.toString() : '';
 
     // Lógica robusta para 'esVendedor'

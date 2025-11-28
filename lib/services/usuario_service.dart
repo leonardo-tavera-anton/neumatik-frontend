@@ -23,4 +23,25 @@ class UsuarioService {
       throw Exception('Error al obtener el usuario: $e');
     }
   }
+
+  // Ejemplo: Simulación de inicio de sesión
+  Future<Usuario> login(String correo, String contrasena) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/auth/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'correo': correo, 'contrasena': contrasena}),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body)['usuario'];
+        // Asumimos que el backend devuelve el objeto Usuario y un token
+        return Usuario.fromJson(data);
+      } else {
+        throw Exception('Error de credenciales o de servidor.');
+      }
+    } catch (e) {
+      throw Exception('Fallo en el proceso de inicio de sesión: $e');
+    }
+  }
 }

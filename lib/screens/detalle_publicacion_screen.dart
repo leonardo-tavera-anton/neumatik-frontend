@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/publicacion_autoparte.dart';
+import '../services/carrito_service.dart';
 import '../services/publicacion_service.dart';
 
 // RUTA ASIGNADA: '/publicacion' (Ruta dinámica)
@@ -17,6 +18,8 @@ class DetallePublicacionScreen extends StatefulWidget {
 
 class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
   final PublicacionService _publicacionService = PublicacionService();
+  final CarritoService _carritoService =
+      CarritoService(); // CAMBIO: Se añade el servicio de carrito.
   late Future<PublicacionAutoparte> _publicacionFuture;
 
   @override
@@ -144,9 +147,7 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
                       const SizedBox(height: 24),
                       // Botón de Añadir al Carrito
                       ElevatedButton.icon(
-                        onPressed: () {
-                          /* Lógica para añadir al carrito */
-                        },
+                        onPressed: () => _anadirAlCarrito(publicacion),
                         icon: const Icon(Icons.add_shopping_cart),
                         label: const Text('Añadir al Carrito'),
                         style: ElevatedButton.styleFrom(

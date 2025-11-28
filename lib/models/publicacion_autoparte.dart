@@ -10,8 +10,10 @@ class PublicacionAutoparte {
   final String condicion; // Nuevo, Usado, Reacondicionado
   final int stock;
   final String ubicacionCiudad;
+  final String idVendedor; // CAMBIO: Se añade el ID del vendedor.
   final String vendedorNombreCompleto;
   final String fotoPrincipalUrl;
+  final String? descripcionCorta; // CAMBIO: Se añade la descripción.
   final DateTime fechaPublicacion;
   final bool iaVerificado; // Campo del análisis IA
 
@@ -24,31 +26,39 @@ class PublicacionAutoparte {
     required this.condicion,
     required this.stock,
     required this.ubicacionCiudad,
+    required this.idVendedor,
     required this.vendedorNombreCompleto,
     required this.fotoPrincipalUrl,
+    this.descripcionCorta,
     required this.fechaPublicacion,
     required this.iaVerificado,
   });
 
   factory PublicacionAutoparte.fromJson(Map<String, dynamic> json) {
     // Concatenar nombre y apellido del vendedor
-    final nombreCompleto =
-        '${json['vendedor_nombre']} ${json['vendedor_apellido']}';
+    // SOLUCIÓN: Se añade protección contra nulos. Si el nombre o apellido son nulos, se usa una cadena vacía.
+    final nombreVendedor = json['vendedor_nombre'] ?? '';
+    final apellidoVendedor = json['vendedor_apellido'] ?? '';
+    final nombreCompleto = '$nombreVendedor $apellidoVendedor'.trim();
 
     // Manejo de la URL de la foto y conversión de tipos
     return PublicacionAutoparte(
-      publicacionId: json['publicacion_id'] as String,
-      nombreParte: json['nombre_parte'] as String,
-      categoria: json['nombre_categoria'] as String,
+      // SOLUCIÓN: Se añade '?? '' ' para proteger contra valores nulos en campos de texto.
+      // Esto evita el error 'Null is not a subtype of type String'.
+      publicacionId: json['publicacion_id'] as String? ?? '',
+      nombreParte: json['nombre_parte'] as String? ?? 'Sin Nombre',
+      categoria: json['nombre_categoria'] as String? ?? 'Sin Categoría',
       numeroOem: json['numero_oem'] as String?,
       precio: double.parse(
         json['precio'].toString(),
       ), //Convierte NUMERIC a String al fin funciona carajo
-      condicion: json['condicion'] as String,
+      condicion: json['condicion'] as String? ?? 'No especificada',
       stock: json['stock'] as int,
-      ubicacionCiudad: json['ubicacion_ciudad'] as String,
+      idVendedor: json['id_vendedor'] as String? ?? '',
+      ubicacionCiudad: json['ubicacion_ciudad'] as String? ?? 'No especificada',
       vendedorNombreCompleto: nombreCompleto,
       // Usamos un placeholder si la URL es nula o vacía
+      descripcionCorta: json['descripcion_corta'] as String?,
       fotoPrincipalUrl:
           json['foto_principal_url'] ??
           'https://via.placeholder.com/150?text=Neumatik',
@@ -72,9 +82,11 @@ class PublicacionAutoparte {
       'condicion': condicion,
       'stock': stock,
       'ubicacion_ciudad': ubicacionCiudad,
+      'id_vendedor': idVendedor,
       'vendedor_nombre': vendedorNombreCompleto.split(
         ' ',
       )[0], // Asume formato "Nombre Apellido"
+      'descripcion_corta': descripcionCorta,
       'vendedor_apellido': vendedorNombreCompleto.split(' ').length > 1
           ? vendedorNombreCompleto.split(' ')[1]
           : '',

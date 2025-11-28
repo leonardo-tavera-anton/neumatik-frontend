@@ -89,23 +89,23 @@ class AuthService {
         return authResult;
       } else {
         // 2. Manejo de códigos de error (4xx, 5xx)
-        String errorDetail =
-            'Error desconocido (Código HTTP: ${response.statusCode})';
-
-        try {
-          final Map<String, dynamic> responseBody = jsonDecode(response.body);
-
-          errorDetail =
-              responseBody['message'] ??
-              responseBody['detail'] ??
-              responseBody['error'] ??
-              errorDetail;
-        } on FormatException {
-          errorDetail =
-              'Error del servidor, no es formato JSON. Código: ${response.statusCode}';
+        // SOLUCIÓN: Validar si la respuesta tiene cuerpo antes de decodificar.
+        if (response.body.isEmpty) {
+          throw Exception(
+            'Error en el registro. El servidor respondió con un error pero sin detalles (Código: ${response.statusCode})',
+          );
         }
 
-        throw Exception('Fallo al registrar usuario: $errorDetail');
+        final Map<String, dynamic> errorBody = jsonDecode(response.body);
+        final errorMessage =
+            errorBody['message'] ??
+            errorBody['detail'] ??
+            errorBody['error'] ??
+            'Ocurrió un error desconocido.';
+
+        // Lanza una excepción con el mensaje de error del backend.
+        // Ejemplo: "El correo ya está en uso."
+        throw Exception(errorMessage);
       }
     } on SocketException {
       throw Exception(
@@ -113,7 +113,7 @@ class AuthService {
       );
     } catch (e) {
       throw Exception(
-        'Ocurrió un error inesperado durante el registro: ${e.toString()}',
+        'Fallo al registrar usuario: ${e.toString().replaceFirst("Exception: ", "")}',
       );
     }
   }
@@ -136,24 +136,32 @@ class AuthService {
         body: body,
       );
 
-      final Map<String, dynamic> responseBody = jsonDecode(response.body);
-
       if (response.statusCode == 200) {
         // 200 OK: Inicio de sesión exitoso
-
+        // Solo decodificamos y procesamos el cuerpo si la respuesta es exitosa.
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
         final authResult = UsuarioAutenticado.fromJson(responseBody);
 
         await _saveToken(authResult.token);
 
         return authResult;
       } else {
-        // Manejar errores (ej: credenciales inválidas, 401 Unauthorized)
-        final errorDetail =
-            responseBody['message'] ??
-            responseBody['detail'] ??
-            responseBody['error'] ??
+        // Manejo de errores (401, 400, etc.)
+        // SOLUCIÓN: Validar si la respuesta tiene cuerpo antes de decodificar.
+        if (response.body.isEmpty) {
+          throw Exception(
+            'Credenciales inválidas o error del servidor (Código: ${response.statusCode})',
+          );
+        }
+        // Decodificamos el cuerpo para obtener el mensaje de error específico del backend.
+        final Map<String, dynamic> errorBody = jsonDecode(response.body);
+        final errorMessage =
+            errorBody['message'] ??
+            errorBody['detail'] ??
             'Credenciales inválidas o error desconocido.';
-        throw Exception('Fallo al iniciar sesión: $errorDetail');
+
+        // Lanza una excepción con el mensaje claro del backend.
+        throw Exception(errorMessage);
       }
     } on SocketException {
       throw Exception(
@@ -164,7 +172,10 @@ class AuthService {
         'Respuesta inesperada del servidor (formato JSON inválido).',
       );
     } catch (e) {
-      throw Exception('Ocurrió un error de conexión: ${e.toString()}');
+      // Limpiamos el mensaje de error para que sea más legible.
+      throw Exception(
+        'Error al iniciar sesión: ${e.toString().replaceFirst("Exception: ", "")}',
+      );
     }
   }
 

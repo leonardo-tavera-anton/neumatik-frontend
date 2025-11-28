@@ -26,6 +26,7 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
   // Variables para la imagen y los dropdowns
   File? _imagenSeleccionada;
   Uint8List? _imagenEnBytes; // Para la vista previa en web y móvil
+  String? _nombreArchivo; // Para la subida
   String _condicionSeleccionada = 'Nuevo';
   int _categoriaSeleccionada = 1; // Default a 'Frenos'
 
@@ -51,6 +52,7 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
       final bytes = await pickedFile.readAsBytes();
       setState(() {
         _imagenSeleccionada = File(pickedFile.path);
+        _nombreArchivo = pickedFile.name;
         _imagenEnBytes = bytes;
       });
     }
@@ -78,7 +80,8 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
     try {
       // 1. Subir la imagen al servidor de imágenes y obtener la URL
       final fotoUrl = await _publicacionService.uploadImage(
-        _imagenSeleccionada!,
+        _imagenEnBytes!,
+        _nombreArchivo!,
       );
 
       await _publicacionService.crearPublicacion(

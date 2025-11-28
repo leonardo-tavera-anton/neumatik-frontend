@@ -5,6 +5,7 @@ import '../models/publicacion_autoparte.dart';
 import '../main.dart'; // Importamos para usar el navigatorKey en caso de sesión expirada
 
 import 'dart:io'; // Necesario para el tipo 'File'
+import 'dart:typed_data'; // SOLUCIÓN: Necesario para el tipo 'Uint8List'
 
 class PublicacionService {
   static const String _baseUrl = 'https://neumatik-backend.up.railway.app';
@@ -46,6 +47,39 @@ class PublicacionService {
       }
     } catch (e) {
       throw Exception('Error de conexión: ${e.toString()}');
+    }
+  }
+
+  // FUNCIÓN AÑADIDA: Para obtener los detalles de UNA SOLA publicación por su ID.
+  Future<PublicacionAutoparte> getPublicacionById(String id) async {
+    final token = await _getToken();
+    // El nuevo endpoint que crearemos en el backend.
+    final url = Uri.parse('$_baseUrl/api/publicaciones/$id');
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // La respuesta ahora es un solo objeto JSON, no una lista.
+        final Map<String, dynamic> data = json.decode(response.body);
+        return PublicacionAutoparte.fromJson(data);
+      } else if (response.statusCode == 404) {
+        throw Exception('La publicación no fue encontrada.');
+      } else {
+        throw Exception(
+          'Fallo al cargar el detalle de la publicación: ${response.body}',
+        );
+      }
+    } catch (e) {
+      throw Exception(
+        'Error de conexión al obtener el detalle: ${e.toString()}',
+      );
     }
   }
 
@@ -113,12 +147,14 @@ class PublicacionService {
   // FUNCIÓN AÑADIDA: Para subir la imagen a un servicio externo.
   // NOTA: Esta es una implementación de EJEMPLO. Necesitarás una cuenta
   // en un servicio como Cloudinary para obtener una URL real.
-  Future<String> uploadImage(File image) async {
+  // SOLUCIÓN: Se cambia el parámetro de 'File' a 'Uint8List' y 'String' para ser compatible con web.
+  Future<String> uploadImage(Uint8List imageBytes, String fileName) async {
     // --- IMPLEMENTACIÓN REAL CON CLOUDINARY ---
 
     // 1. **REEMPLAZA ESTOS VALORES CON LOS TUYOS**
-    const String cloudName = 'dfej71ufs';
-    const String uploadPreset = 'neumatik_uploads';
+    const String cloudName = 'dfej71ufs'; //nombre de mi cloud
+    const String uploadPreset =
+        'neumatik_uploads'; //configurado asi en cloudinary
 
     // 2. Configura la URL del servicio de Cloudinary.
     final url = Uri.parse(
@@ -127,8 +163,15 @@ class PublicacionService {
 
     // 3. Crea una petición 'multipart' para poder enviar el archivo.
     final request = http.MultipartRequest('POST', url)
-      ..fields['upload_preset'] = uploadPreset
-      ..files.add(await http.MultipartFile.fromPath('file', image.path));
+      ..fields['upload_preset'] = uploadPreset;
+
+    // SOLUCIÓN: Usamos MultipartFile.fromBytes, que no depende de dart:io y funciona en web.
+    final multipartFile = http.MultipartFile.fromBytes(
+      'file',
+      imageBytes,
+      filename: fileName,
+    );
+    request.files.add(multipartFile);
 
     // 4. Envía la petición y espera la respuesta.
     final streamResponse = await request.send();

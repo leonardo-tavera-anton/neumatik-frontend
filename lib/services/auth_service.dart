@@ -289,9 +289,9 @@ class AuthService {
       throw Exception('Usuario no autenticado para actualizar.');
     }
 
-    final url = Uri.parse(
-      '$_baseUrl$_profileEndpoint',
-    ); // Mismo endpoint de perfil, pero con método PUT
+    // SOLUCIÓN: Asegurarse de que se usa el endpoint correcto para la petición PUT.
+    // La variable _profileEndpoint ya apunta a '/api/usuario/perfil'.
+    final url = Uri.parse('$_baseUrl$_profileEndpoint');
 
     final body = jsonEncode({
       'nombre': nombre,

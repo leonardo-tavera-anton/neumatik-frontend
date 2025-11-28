@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 // Importamos el modelo UsuarioAutenticado para el tipado, ya que el servicio lo devuelve.
 import '../models/usuario_autenticado.dart'; 
@@ -11,7 +12,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _correoController = TextEditingController();
@@ -35,9 +35,12 @@ class _LoginScreenState extends State<LoginScreen> {
       final String correo = _correoController.text.trim();
       final String contrasena = _contrasenaController.text;
 
+      // Obtenemos la instancia de AuthService desde Provider.
+      final authService = context.read<AuthService>();
+
       try {
         // Tipamos explícitamente el resultado para asegurar el uso del modelo UsuarioAutenticado.
-        final UsuarioAutenticado usuarioAutenticado = await _authService.loginUser(
+        final UsuarioAutenticado usuarioAutenticado = await authService.loginUser(
           correo: correo, 
           contrasena: contrasena,
         );
@@ -110,6 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
               borderRadius: BorderRadius.circular(20.0),
               boxShadow: [
                 BoxShadow(
+                  // ignore: deprecated_member_use
                   color: Colors.black.withOpacity(0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 5),

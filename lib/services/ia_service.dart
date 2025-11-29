@@ -8,14 +8,15 @@ class IAService {
   // Obtén tu clave desde Google AI Studio: https://aistudio.google.com/app/apikey
   // ADVERTENCIA: NUNCA expongas esta clave en el código de una aplicación en producción.
   // Lo ideal es obtenerla desde un backend seguro. Para desarrollo, la usamos aquí.
+  // el api se llama Clave App Neumatik Flutter tal cual hay 2 clouds pero solo uno es el correcto
   static const String _apiKey =
-      'AIzaSy...'; // <-- PEGA AQUÍ TU NUEVA CLAVE DEL PROYECTO 'neumatik-ia-2'
+      'AIzaSyBo74PvveM2hjcmMrbth8eS-hIAJK9xw1w'; //clave api
 
   final GenerativeModel _model;
 
   IAService()
     : _model = GenerativeModel(
-        // Usamos el modelo 'gemini-pro-vision', que es el correcto para la librería v0.4.7
+        // Usamos el modelo 'gemini-pro-vision', que es el correcto para la librería v0.3.0
         model: 'gemini-pro-vision',
         apiKey: _apiKey,
       );

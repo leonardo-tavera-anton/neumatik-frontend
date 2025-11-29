@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/publicacion_autoparte.dart';
 import '../services/carrito_service.dart';
 import '../services/publicacion_service.dart';
+import '../services/auth_service.dart'; // Importamos para saber quién es el usuario.
 
 // RUTA ASIGNADA: '/publicacion' (Ruta dinámica)
 // FUNCIÓN: Muestra la información detallada de una publicación específica.
@@ -20,15 +21,41 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
   final PublicacionService _publicacionService = PublicacionService();
   final CarritoService _carritoService =
       CarritoService(); // CAMBIO: Se añade el servicio de carrito.
+  final AuthService _authService =
+      AuthService(); // SOLUCIÓN: Para verificar el dueño.
+
   late Future<PublicacionAutoparte> _publicacionFuture;
+  bool _esPropietario = false; // Estado para saber si el usuario es el dueño.
 
   @override
   void initState() {
     super.initState();
-    // Llamamos al nuevo método para obtener los detalles de la publicación.
-    _publicacionFuture = _publicacionService.getPublicacionById(
-      widget.publicacionId,
-    );
+    _cargarDatosYVerificarPropietario();
+  }
+
+  // SOLUCIÓN: Nueva función para cargar todo y verificar si el usuario es el dueño.
+  Future<void> _cargarDatosYVerificarPropietario() async {
+    // Iniciamos la carga de la publicación.
+    final future = _publicacionService.getPublicacionById(widget.publicacionId);
+    setState(() {
+      _publicacionFuture = future;
+    });
+
+    try {
+      // Obtenemos el ID del usuario actual y los datos de la publicación.
+      final currentUserId = await _authService.getCurrentUserId();
+      final publicacion = await future;
+
+      if (mounted &&
+          currentUserId != null &&
+          currentUserId == publicacion.idVendedor) {
+        setState(() {
+          _esPropietario = true;
+        });
+      }
+    } catch (e) {
+      // Manejar error si es necesario, aunque el FutureBuilder ya lo hace.
+    }
   }
 
   // SOLUCIÓN: Se añade la función que faltaba para manejar la acción de añadir al carrito.
@@ -57,7 +84,22 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalle de Autoparte')),
+      appBar: AppBar(
+        title: const Text('Detalle de Autoparte'),
+        // SOLUCIÓN: Mostramos el botón de editar solo si el usuario es el propietario.
+        actions: [
+          if (_esPropietario)
+            IconButton(
+              icon: const Icon(Icons.edit_note),
+              tooltip: 'Editar Publicación',
+              onPressed: () {
+                // Navegar a la pantalla de edición.
+                // Aún no la hemos creado, pero preparamos la navegación.
+                // Navigator.pushNamed(context, '/edit-publicacion', arguments: widget.publicacionId);
+              },
+            ),
+        ],
+      ),
       // Usamos un FutureBuilder para manejar los estados de carga, error y éxito.
       body: FutureBuilder<PublicacionAutoparte>(
         future: _publicacionFuture,

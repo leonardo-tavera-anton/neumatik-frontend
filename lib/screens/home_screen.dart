@@ -122,9 +122,39 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// WIDGET AÑADIDO: Define la estructura del menú lateral.
-class AppDrawer extends StatelessWidget {
+// SOLUCIÓN: Convertimos el Drawer a StatefulWidget para que sea dinámico.
+class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
+
+  @override
+  State<AppDrawer> createState() => _AppDrawerState();
+}
+
+class _AppDrawerState extends State<AppDrawer> {
+  final AuthService _authService = AuthService();
+  bool _esVendedor = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _verificarRolVendedor();
+  }
+
+  // Verifica si el usuario es vendedor para mostrar opciones adicionales.
+  Future<void> _verificarRolVendedor() async {
+    try {
+      // Usamos el mismo servicio que la pantalla de perfil.
+      final perfilData = await _authService.fetchUserProfile();
+      final perfil = perfilData['user'] as Map<String, dynamic>;
+      if (mounted && perfil['es_vendedor'] == true) {
+        setState(() {
+          _esVendedor = true;
+        });
+      }
+    } catch (e) {
+      // Si hay un error (ej. token expirado), no se muestra la opción.
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -169,6 +199,17 @@ class AppDrawer extends StatelessWidget {
               Navigator.pushNamed(context, '/carrito');
             },
           ),
+          // SOLUCIÓN: Opción "Mis Publicaciones" solo para vendedores.
+          if (_esVendedor)
+            ListTile(
+              leading: const Icon(Icons.store_mall_directory_outlined),
+              title: const Text('Mis Publicaciones'),
+              onTap: () {
+                Navigator.pop(context);
+                // Usamos la nueva ruta que crearemos en main.dart
+                Navigator.pushNamed(context, '/mis-publicaciones');
+              },
+            ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),

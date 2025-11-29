@@ -83,6 +83,40 @@ class PublicacionService {
     }
   }
 
+  // FUNCIÓN AÑADIDA: Para obtener las publicaciones del usuario autenticado.
+  Future<List<PublicacionAutoparte>> getMisPublicaciones() async {
+    final token = await _getToken();
+    if (token == null) {
+      throw Exception('No estás autenticado.');
+    }
+
+    // Este será el nuevo endpoint en tu backend para esta funcionalidad.
+    final url = Uri.parse('$_baseUrl/api/usuario/publicaciones');
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => PublicacionAutoparte.fromJson(json)).toList();
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        throw Exception('Sesión expirada. Por favor, inicie sesión de nuevo.');
+      } else {
+        throw Exception('Fallo al cargar tus publicaciones: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception(
+        'Error de conexión al obtener tus publicaciones: ${e.toString()}',
+      );
+    }
+  }
+
   // FUNCIÓN AÑADIDA: Para crear una nueva publicación.
   Future<void> crearPublicacion({
     required String nombreParte,

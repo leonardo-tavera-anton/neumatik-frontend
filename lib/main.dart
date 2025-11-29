@@ -5,6 +5,7 @@ import 'screens/crear_publicacion_screen.dart';
 import 'screens/edit_perfil_screen.dart';
 import 'screens/detalle_publicacion_screen.dart';
 import 'screens/ia_reconocimiento_screen.dart';
+import 'screens/mis_publicaciones_screen.dart'; // Importamos la pantalla
 import 'screens/login_screen.dart'; // Importa la pantalla de login
 import 'screens/perfil_screen.dart';
 import 'screens/registro_screen.dart'; // Importa la pantalla de registro
@@ -59,6 +60,8 @@ class MyApp extends StatelessWidget {
                   as Map<String, dynamic>;
           return EditPerfilScreen(perfil: perfilActual);
         },
+        // SOLUCIÓN: Añadimos la ruta para la pantalla de "Mis Publicaciones".
+        '/mis-publicaciones': (context) => const MisPublicacionesScreen(),
         '/crear-publicacion': (context) => const CrearPublicacionScreen(),
         // 4. RUTA DE DETALLE: Ruta para mostrar el detalle de una publicación.
         // Extrae el ID de los argumentos de la ruta.

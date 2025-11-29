@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import 'mis_publicaciones_screen.dart'; // Importamos la nueva pantalla
 
 // RUTA ASIGNADA: '/perfil'
 // FUNCIÓN: Dashboard para gestión de perfil, historial y publicaciones (vendedor).
@@ -138,6 +139,25 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   ),
                 ),
               ),
+
+              // SOLUCIÓN: Sección "Mis Publicaciones" solo para vendedores.
+              if (perfil['es_vendedor'] == true)
+                Card(
+                  elevation: 2,
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.store_mall_directory_outlined,
+                      color: Colors.teal,
+                    ),
+                    title: const Text('Mis Publicaciones'),
+                    subtitle: const Text('Gestiona tus productos a la venta'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      // CORRECCIÓN: Usamos la ruta con nombre definida en main.dart
+                      Navigator.pushNamed(context, '/mis-publicaciones');
+                    },
+                  ),
+                ),
               const SizedBox(height: 30),
               ElevatedButton.icon(
                 onPressed: _logout,

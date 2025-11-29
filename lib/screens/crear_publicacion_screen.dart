@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data'; // Necesario para leer los bytes de la imagen
+import 'package:flutter/services.dart'; // Importamos para usar los formateadores de texto
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/publicacion_service.dart';
@@ -193,8 +194,19 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                validator: (v) =>
-                    v!.isEmpty ? 'El precio es obligatorio' : null,
+                // SOLUCIÓN: Solo permite números y un punto decimal.
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                ],
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return 'El precio es obligatorio';
+                  }
+                  if (double.tryParse(v) == null) {
+                    return 'Por favor, introduce un número válido.';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -203,7 +215,14 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
                   labelText: 'Cantidad en Stock',
                 ),
                 keyboardType: TextInputType.number,
-                validator: (v) => v!.isEmpty ? 'El stock es obligatorio' : null,
+                // SOLUCIÓN: Solo permite dígitos enteros.
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return 'El stock es obligatorio';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 12),
               TextFormField(

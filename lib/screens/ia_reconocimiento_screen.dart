@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:typed_data'; // Necesario para manejar bytes de imagen (compatible con web)
 import 'package:image_picker/image_picker.dart'; // Paquete necesario para seleccionar imágenes
 import '../services/ia_service.dart'; // Importamos el servicio de IA que creamos
+import 'package:flutter_markdown/flutter_markdown.dart'; // Paquete para renderizar Markdown
 
 class IAReconocimientoScreen extends StatefulWidget {
   const IAReconocimientoScreen({super.key});
@@ -176,10 +177,13 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
                 color: Colors.teal[50],
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: SelectableText(
-                // Usamos SelectableText para permitir copiar el resultado
-                _analysisResult,
-                style: TextStyle(fontSize: 14, color: Colors.grey[800]),
+              child: MarkdownBody(
+                // Usamos MarkdownBody para renderizar el formato de la IA
+                data: _analysisResult,
+                selectable: true, // Permite al usuario copiar el texto
+                styleSheet: MarkdownStyleSheet(
+                  p: const TextStyle(fontSize: 14),
+                ),
               ),
             ),
           ],

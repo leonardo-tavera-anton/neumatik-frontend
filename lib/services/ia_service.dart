@@ -25,14 +25,15 @@ class IAService {
       // 1. Preparamos el "prompt" o la instrucción para la IA.
       // Le decimos qué queremos que haga con la imagen.
       final prompt = TextPart(
-        "Analiza la siguiente imagen de una autoparte de vehículo. Proporciona un análisis detallado que incluya:\n"
-        "- Nombre de la parte detectada.\n"
-        "- Posible número de parte (OEM), si es visible o deducible.\n"
-        "- Material principal.\n"
-        "- Condición estimada (nuevo, usado, nivel de desgaste).\n"
-        "- Posible compatibilidad con marcas o modelos de vehículos.\n"
-        "- Una conclusión final sobre la pieza.\n"
-        "Formatea la respuesta de manera clara y profesional usando Markdown.",
+        "Eres un experto en reconocimiento de autopartes. Analiza la imagen y proporciona solo la información más valiosa y relevante en español. Sé extremadamente breve y directo. Tu respuesta debe ser una lista de datos clave, usando Markdown. Incluye únicamente los siguientes puntos:\n"
+        "- **Marca:** (La marca de la pieza, si es visible. Este es el dato más importante).\n"
+        "- **Nombre de la pieza:** (Ej: Pastilla de freno, Filtro de aceite).\n"
+        "- **Modelo/Tipo:** (Si aplica, ej: para llantas, el modelo específico).\n"
+        "- **Condición estimada:** (Nuevo, Usado, Desgastado).\n"
+        "- **Número de Parte (OEM):** (Si es visible o claramente deducible).\n"
+        "- **Fecha de Creación:** (Si se puede determinar por algún código en la pieza).\n"
+        "- **Compatibilidad:** (Vehículos compatibles, si se conoce).\n"
+        "Si no puedes determinar con certeza alguno de estos datos, OMITE COMPLETAMENTE la línea correspondiente. No escribas 'No disponible' ni des explicaciones.",
       );
 
       // 2. Preparamos la imagen para ser enviada.

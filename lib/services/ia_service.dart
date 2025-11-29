@@ -2,6 +2,7 @@
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart'; // SOLUCIÓN: Importamos para especificar el tipo de contenido.
 import 'package:shared_preferences/shared_preferences.dart';
 
 class IAService {
@@ -28,6 +29,8 @@ class IAService {
         'image', // El nombre del campo debe coincidir con el del backend: upload.single('image')
         imageBytes,
         filename: 'upload.jpg', // Un nombre de archivo genérico es suficiente.
+        // SOLUCIÓN: Especificamos explícitamente que estamos enviando una imagen JPEG.
+        contentType: MediaType('image', 'jpeg'),
       );
       request.files.add(multipartFile);
 

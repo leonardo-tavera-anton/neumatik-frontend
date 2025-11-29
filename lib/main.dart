@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'screens/carrito_screen.dart';
 import 'screens/home_screen.dart'; // Importa la pantalla de inicio
 import 'screens/crear_publicacion_screen.dart';
-import 'screens/edit_perfil_screen.dart';
+import 'screens/edit_perfil_screen.dart'; // Importamos la pantalla de edición
 import 'screens/detalle_publicacion_screen.dart';
 import 'screens/ia_reconocimiento_screen.dart';
 import 'screens/mis_publicaciones_screen.dart'; // Importamos la pantalla
@@ -10,6 +10,8 @@ import 'screens/login_screen.dart'; // Importa la pantalla de login
 import 'screens/perfil_screen.dart';
 import 'screens/registro_screen.dart'; // Importa la pantalla de registro
 import 'services/auth_service.dart'; // Importa el servicio de autenticación
+import 'screens/edit_publicacion_screen.dart';
+import 'models/publicacion_autoparte.dart';
 
 // 1. GlobalKey para el Navigator
 // Esto permite la navegación desde fuera del árbol de widgets, una práctica robusta.
@@ -62,6 +64,13 @@ class MyApp extends StatelessWidget {
         },
         // SOLUCIÓN: Añadimos la ruta para la pantalla de "Mis Publicaciones".
         '/mis-publicaciones': (context) => const MisPublicacionesScreen(),
+        // SOLUCIÓN: Añadimos la ruta para la pantalla de edición de publicaciones.
+        '/edit-publicacion': (context) {
+          final publicacion =
+              ModalRoute.of(context)!.settings.arguments
+                  as PublicacionAutoparte;
+          return EditPublicacionScreen(publicacion: publicacion);
+        },
         '/crear-publicacion': (context) => const CrearPublicacionScreen(),
         // 4. RUTA DE DETALLE: Ruta para mostrar el detalle de una publicación.
         // Extrae el ID de los argumentos de la ruta.

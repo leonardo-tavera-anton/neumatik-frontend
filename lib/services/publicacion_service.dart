@@ -172,6 +172,60 @@ class PublicacionService {
     }
   }
 
+  // FUNCIÓN AÑADIDA: Para actualizar una publicación existente.
+  Future<void> updatePublicacion({
+    required String publicacionId,
+    required String nombreParte,
+    required int idCategoria,
+    required double precio,
+    required String condicion,
+    required int stock,
+    required String ubicacionCiudad,
+    String? numeroOem,
+    String? descripcionCorta,
+  }) async {
+    final token = await _getToken();
+    if (token == null) {
+      throw Exception('No estás autenticado para realizar esta acción.');
+    }
+
+    // El endpoint para actualizar una publicación específica.
+    final url = Uri.parse('$_baseUrl/api/publicaciones/$publicacionId');
+
+    final body = jsonEncode({
+      'nombre_parte': nombreParte,
+      'id_categoria': idCategoria,
+      'precio': precio,
+      'condicion': condicion,
+      'stock': stock,
+      'ubicacion_ciudad': ubicacionCiudad,
+      'numero_oem': numeroOem ?? '',
+      'descripcion_corta': descripcionCorta ?? '',
+    });
+
+    try {
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: body,
+      );
+
+      if (response.statusCode != 200) {
+        // Si el backend devuelve un error, lo lanzamos.
+        final errorBody = jsonDecode(response.body);
+        throw Exception(
+          errorBody['message'] ?? 'Error desconocido del servidor.',
+        );
+      }
+      // Si es 200, la operación fue exitosa.
+    } catch (e) {
+      throw Exception('Fallo al actualizar la publicación: ${e.toString()}');
+    }
+  }
+
   // Método privado para obtener el token, para no duplicar código.
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();

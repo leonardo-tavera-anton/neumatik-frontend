@@ -83,51 +83,60 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detalle de Autoparte'),
-        // SOLUCIÓN: Mostramos el botón de editar solo si el usuario es el propietario.
-        actions: [
-          if (_esPropietario)
-            IconButton(
-              icon: const Icon(Icons.edit_note),
-              tooltip: 'Editar Publicación',
-              onPressed: () {
-                // Navegar a la pantalla de edición.
-                // Aún no la hemos creado, pero preparamos la navegación.
-                // Navigator.pushNamed(context, '/edit-publicacion', arguments: widget.publicacionId);
-              },
-            ),
-        ],
-      ),
-      // Usamos un FutureBuilder para manejar los estados de carga, error y éxito.
-      body: FutureBuilder<PublicacionAutoparte>(
-        future: _publicacionFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.teal),
-            );
-          } else if (snapshot.hasError) {
-            return Center(
+    // CORRECCIÓN: El FutureBuilder ahora envuelve todo el Scaffold.
+    return FutureBuilder<PublicacionAutoparte>(
+      future: _publicacionFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator(color: Colors.teal)),
+          );
+        } else if (snapshot.hasError) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Error')),
+            body: Center(
               child: Text(
                 'Error: ${snapshot.error.toString().replaceFirst("Exception: ", "")}',
                 style: const TextStyle(color: Colors.red),
                 textAlign: TextAlign.center,
               ),
-            );
-          } else if (!snapshot.hasData) {
-            return const Center(child: Text('No se encontró la publicación.'));
-          }
+            ),
+          );
+        } else if (!snapshot.hasData) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('No Encontrado')),
+            body: Center(child: Text('No se encontró la publicación.')),
+          );
+        }
 
-          // Si todo sale bien, tenemos los datos de la publicación.
-          final publicacion = snapshot.data!;
+        // Si todo sale bien, tenemos los datos de la publicación.
+        final publicacion = snapshot.data!;
 
-          return SingleChildScrollView(
+        // Construimos el Scaffold completo ahora que tenemos los datos.
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Detalle de Autoparte'),
+            actions: [
+              if (_esPropietario)
+                IconButton(
+                  icon: const Icon(Icons.edit_note),
+                  tooltip: 'Editar Publicación',
+                  onPressed: () {
+                    // CORRECCIÓN: Ahora 'snapshot' sí está definido en este contexto.
+                    Navigator.pushNamed(
+                      context,
+                      '/edit-publicacion',
+                      arguments: snapshot.data!,
+                    );
+                  },
+                ),
+            ],
+          ),
+          body: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                //imagen principal subida a cloudinary
+                // Imagen principal
                 Image.network(
                   publicacion.fotoPrincipalUrl,
                   height: 300,
@@ -143,6 +152,7 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
                     ),
                   ),
                 ),
+                // Resto del contenido de la pantalla...
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -167,10 +177,11 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
                             ),
                         ],
                       ),
+                      // ... (el resto del código sigue igual)
                       const SizedBox(height: 8),
                       // Precio
                       Text(
-                        '\$${publicacion.precio.toStringAsFixed(2)}',
+                        'S/ ${publicacion.precio.toStringAsFixed(2)}',
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w900,
@@ -242,9 +253,9 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
                 ),
               ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

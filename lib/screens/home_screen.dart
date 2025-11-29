@@ -296,7 +296,7 @@ class AutoparteCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '\$${publicacion.precio.toStringAsFixed(2)}',
+                  'S/ ${publicacion.precio.toStringAsFixed(2)}', // CORRECCIÓN: Unificamos la moneda a Soles.
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 20,

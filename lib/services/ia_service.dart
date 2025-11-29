@@ -9,13 +9,13 @@ class IAService {
   // ADVERTENCIA: NUNCA expongas esta clave en el código de una aplicación en producción.
   // Lo ideal es obtenerla desde un backend seguro. Para desarrollo, la usamos aquí.
   static const String _apiKey =
-      'AIzaSyBs4sUzDiXOEly_64A667bJV5PZJUhNDjw'; //clave de google studio
+      'AIzaSy...'; // <-- PEGA AQUÍ TU NUEVA CLAVE DEL PROYECTO 'neumatik-ia-2'
 
   final GenerativeModel _model;
 
   IAService()
     : _model = GenerativeModel(
-        // Usamos el modelo 'gemini-pro-vision', que acepta imágenes y texto.
+        // Usamos el modelo 'gemini-pro-vision', que es el correcto para la librería v0.4.7
         model: 'gemini-pro-vision',
         apiKey: _apiKey,
       );

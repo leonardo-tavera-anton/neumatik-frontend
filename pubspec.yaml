@@ -32,7 +32,7 @@ dependencies:
     sdk: flutter
   image_picker: ^1.0.4
   shared_preferences: ^2.2.2
-  google_generative_ai: ^0.3.0 # <-- USA ESTA VERSIÓN ESTABLE
+  google_generative_ai: ^0.4.7 # <-- USA LA VERSIÓN MÁS RECIENTE Y ESTABLE
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

@@ -16,7 +16,7 @@ class IAService {
 
   IAService()
     : _model = GenerativeModel(
-        // Usamos el modelo 'gemini-pro-vision', que es el correcto para la librería v0.3.0
+        // Usamos el modelo 'gemini-pro-vision', que es el correcto para la librería v0.4.7
         model: 'gemini-pro-vision',
         apiKey: _apiKey,
       );

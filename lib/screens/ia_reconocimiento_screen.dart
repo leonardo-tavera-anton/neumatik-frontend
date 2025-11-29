@@ -38,6 +38,21 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
     }
   }
 
+  // 3. Nueva función para tomar una foto con la cámara
+  Future<void> _takePicture() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+
+    if (image != null) {
+      // Leemos los bytes de la imagen para la vista previa y el envío a la IA
+      final bytes = await image.readAsBytes();
+      setState(() {
+        _imageBytes = bytes;
+        _analysisResult =
+            'Imagen capturada. Presiona "Analizar con IA" para obtener resultados.';
+      });
+    }
+  }
+
   // 2. Función para enviar la imagen al modelo de IA
   Future<void> _analyzeImage() async {
     if (_imageBytes == null) {
@@ -84,7 +99,7 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
           children: [
             // Sección de la Imagen Seleccionada o Placeholder
             Container(
-              height: 250,
+              height: 350, // <-- Aumentamos la altura del visor de la imagen
               decoration: BoxDecoration(
                 color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(12),
@@ -114,19 +129,43 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
 
             const SizedBox(height: 20),
 
-            // Botón para seleccionar imagen
-            ElevatedButton.icon(
-              onPressed: _pickImage,
-              icon: const Icon(Icons.upload_file),
-              label: const Text('Seleccionar Imagen de Galería'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal[400],
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+            // Botones para seleccionar imagen (Galería y Cámara)
+            Row(
+              children: [
+                // Botón para Galería
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _pickImage,
+                    icon: const Icon(Icons.photo_library),
+                    label: const Text('Galería'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal[400],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 16),
+                // Botón para Cámara
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _takePicture, // Llamamos a la nueva función
+                    icon: const Icon(Icons.camera_alt),
+                    label: const Text('Cámara'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal[400],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
 
             const SizedBox(height: 16),

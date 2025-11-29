@@ -9,8 +9,7 @@ class IAService {
   // ADVERTENCIA: NUNCA expongas esta clave en el código de una aplicación en producción.
   // Lo ideal es obtenerla desde un backend seguro. Para desarrollo, la usamos aquí.
   // el api se llama Clave App Neumatik Flutter tal cual hay 2 clouds pero solo uno es el correcto
-  static const String _apiKey = '...'; // <-- PEGA AQUÍ TU NUEVA CLAVE DE API
-  // ¡IMPORTANTE! No compartas esta nueva clave públicamente.
+  static const String _apiKey = 'AIzaSyA4xkgdjnIORnpVS5M2Lo0H6v0yhdc2iNA';
 
   final GenerativeModel _model;
 

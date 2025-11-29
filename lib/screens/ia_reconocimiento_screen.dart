@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
+import 'dart:typed_data'; // Necesario para manejar bytes de imagen (compatible con web)
 import 'package:image_picker/image_picker.dart'; // Paquete necesario para seleccionar imágenes
-// import '../services/ia_service.dart'; // Descomentar al crear el servicio de IA
+import '../services/ia_service.dart'; // Importamos el servicio de IA que creamos
 
 class IAReconocimientoScreen extends StatefulWidget {
   const IAReconocimientoScreen({super.key});
@@ -11,22 +11,26 @@ class IAReconocimientoScreen extends StatefulWidget {
 }
 
 class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
-  File? _selectedImage;
+  // Almacenamos los bytes de la imagen para compatibilidad con web y móvil
+  Uint8List? _imageBytes;
   // Estado para mostrar el resultado del análisis
   String _analysisResult =
       'Sube una foto de la autoparte para comenzar el análisis de Neumatik AI.';
   bool _isLoading = false;
 
   final ImagePicker _picker = ImagePicker();
-  // final IAService _iaService = IAService(); // Descomentar al crear el servicio
+  final IAService _iaService =
+      IAService(); // Instanciamos nuestro servicio de IA
 
   // 1. Función para seleccionar la imagen
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
 
     if (image != null) {
+      // Leemos los bytes de la imagen para la vista previa y el envío a la IA
+      final bytes = await image.readAsBytes();
       setState(() {
-        _selectedImage = File(image.path);
+        _imageBytes = bytes;
         _analysisResult =
             'Imagen seleccionada. Presiona "Analizar con IA" para obtener resultados.';
       });
@@ -35,7 +39,7 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
 
   // 2. Función para enviar la imagen al modelo de IA
   Future<void> _analyzeImage() async {
-    if (_selectedImage == null) {
+    if (_imageBytes == null) {
       setState(() {
         _analysisResult = 'Por favor, selecciona una imagen primero.';
       });
@@ -48,25 +52,12 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
     });
 
     try {
-      // AQUÍ IRÁ LA INTEGRACIÓN REAL CON GEMINI A TRAVÉS DE IAService
-      // final result = await _iaService.analyzeImage(_selectedImage!);
-
-      // Simulación de respuesta (ESTO DEBE SER REEMPLAZADO por el llamado real)
-      await Future.delayed(const Duration(seconds: 3));
-      const simulatedResult = """
-      **Análisis Detallado de Autoparte**
-      
-      * **Parte Detectada:** Pastillas de Freno (Eje Delantero)
-      * **Número OEM Sugerido:** 41060-6RA9A
-      * **Material:** Compuesto Cerámico (Alta resistencia)
-      * **Condición Estimada:** Usado (70% de vida útil restante)
-      * **Compatibilidad Tentativa:** Nissan Sentra (2018-2023)
-      
-      *Conclusión AI: Validación de alta confianza. Esta parte parece genuina y compatible con modelos recientes de Nissan.*
-      """;
+      // ¡Llamada real al servicio de IA!
+      // Enviamos los bytes de la imagen y esperamos el resultado.
+      final result = await _iaService.analizarImagen(_imageBytes!);
 
       setState(() {
-        _analysisResult = simulatedResult;
+        _analysisResult = result;
       });
     } catch (e) {
       setState(() {
@@ -98,10 +89,10 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.teal, width: 2),
               ),
-              child: _selectedImage != null
+              child: _imageBytes != null
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(10),
-                      child: Image.file(_selectedImage!, fit: BoxFit.cover),
+                      child: Image.memory(_imageBytes!, fit: BoxFit.cover),
                     )
                   : Column(
                       mainAxisAlignment: MainAxisAlignment.center,

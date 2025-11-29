@@ -8,7 +8,8 @@ class IAService {
   // Obtén tu clave desde Google AI Studio: https://aistudio.google.com/app/apikey
   // ADVERTENCIA: NUNCA expongas esta clave en el código de una aplicación en producción.
   // Lo ideal es obtenerla desde un backend seguro. Para desarrollo, la usamos aquí.
-  static const String _apiKey = 'TU_API_KEY_DE_GEMINI';
+  static const String _apiKey =
+      'AIzaSy...'; // <-- PEGA AQUÍ LA CLAVE QUE COPIASTE DE GOOGLE AI STUDIO
 
   final GenerativeModel _model;
 

@@ -9,7 +9,7 @@ class IAService {
   // ADVERTENCIA: NUNCA expongas esta clave en el código de una aplicación en producción.
   // Lo ideal es obtenerla desde un backend seguro. Para desarrollo, la usamos aquí.
   static const String _apiKey =
-      'AIzaSy...'; // <-- PEGA AQUÍ LA CLAVE QUE COPIASTE DE GOOGLE AI STUDIO
+      'AIzaSyBs4sUzDiXOEly_64A667bJV5PZJUhNDjw'; //clave de google studio
 
   final GenerativeModel _model;
 

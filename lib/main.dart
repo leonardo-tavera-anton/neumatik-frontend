@@ -75,9 +75,20 @@ class MyApp extends StatelessWidget {
         // 4. RUTA DE DETALLE: Ruta para mostrar el detalle de una publicación.
         // Extrae el ID de los argumentos de la ruta.
         '/publicacion': (context) {
-          final publicacionId =
-              ModalRoute.of(context)!.settings.arguments as String;
-          return DetallePublicacionScreen(publicacionId: publicacionId);
+          final arguments = ModalRoute.of(context)!.settings.arguments;
+          // SOLUCIÓN: Se añade una verificación para evitar errores durante el hot restart
+          // si los argumentos se pierden.
+          if (arguments is String) {
+            return DetallePublicacionScreen(publicacionId: arguments);
+          }
+          // Si los argumentos no son válidos, muestra una pantalla de error segura.
+          return Scaffold(
+            // CORRECCIÓN: Se elimina 'const' porque AppBar no es constante.
+            appBar: AppBar(title: const Text('Error')),
+            body: const Center(
+              child: Text('ID de publicación no válido o no encontrado.'),
+            ),
+          );
         },
       },
     );

@@ -48,7 +48,8 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
 
       if (mounted &&
           currentUserId != null &&
-          currentUserId == publicacion.idVendedor) {
+          currentUserId.toString() == publicacion.idVendedor) {
+        // CORRECCIÓN: Comparamos ambos IDs como Strings.
         setState(() {
           _esPropietario = true;
         });

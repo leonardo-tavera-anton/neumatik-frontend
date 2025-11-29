@@ -58,7 +58,9 @@ class PublicacionAutoparte {
       condicion: json['condicion'] as String? ?? 'No especificada',
       stock: json['stock'] as int,
 
-      idVendedor: json['id_vendedor'] as String? ?? '',
+      // CORRECCIÓN: Nos aseguramos de que el ID del vendedor siempre se convierta a String.
+      // Esto soluciona el problema de comparación (int vs String).
+      idVendedor: (json['id_vendedor'] ?? '').toString(),
       ubicacionCiudad: json['ubicacion_ciudad'] as String? ?? 'No especificada',
       vendedorNombreCompleto: nombreCompleto,
       // Usamos un placeholder si la URL es nula o vacía

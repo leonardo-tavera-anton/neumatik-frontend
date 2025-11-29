@@ -17,6 +17,7 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
   // Estado para mostrar el resultado del análisis
   String _analysisResult =
       'Sube una foto de la autoparte para comenzar el análisis de Neumatik AI.';
+
   bool _isLoading = false;
 
   final ImagePicker _picker = ImagePicker();
@@ -68,12 +69,10 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
     });
 
     try {
-      // ¡Llamada real al servicio de IA!
-      // Enviamos los bytes de la imagen y esperamos el resultado.
-      final result = await _iaService.analizarImagen(_imageBytes!);
-
+      // Volvemos a la llamada única y simple.
+      final specificResult = await _iaService.analizarImagen(_imageBytes!);
       setState(() {
-        _analysisResult = result;
+        _analysisResult = specificResult;
       });
     } catch (e) {
       setState(() {

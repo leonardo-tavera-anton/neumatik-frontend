@@ -32,7 +32,6 @@ dependencies:
     sdk: flutter
   image_picker: ^1.0.4
   shared_preferences: ^2.2.2
-  google_generative_ai: ^0.4.7 # <-- USA LA VERSIÓN MÁS RECIENTE Y ESTABLE
   flutter_markdown: ^0.7.0 # <-- AÑADE ESTA LÍNEA PARA MOSTRAR EL FORMATO
 
   # The following adds the Cupertino Icons font to your application.

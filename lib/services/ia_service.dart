@@ -1,53 +1,48 @@
 // lib/services/ia_service.dart
 import 'dart:typed_data';
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class IAService {
-  // --- ¡IMPORTANTE! ---
-  // Reemplaza 'TU_API_KEY_DE_GEMINI' con tu clave de API real.
-  // Obtén tu clave desde Google AI Studio: https://aistudio.google.com/app/apikey
-  // ADVERTENCIA: NUNCA expongas esta clave en el código de una aplicación en producción.
-  // Lo ideal es obtenerla desde un backend seguro. Para desarrollo, la usamos aquí.
-  // el api se llama Clave App Neumatik Flutter tal cual hay 2 clouds pero solo uno es el correcto
-  static const String _apiKey = 'AIzaSyA4xkgdjnIORnpVS5M2Lo0H6v0yhdc2iNA';
-
-  final GenerativeModel _model;
-
-  IAService()
-    : _model = GenerativeModel(
-        // Usamos el modelo 'gemini-2.0-flash', que está disponible en tu cuenta.
-        model: 'gemini-2.0-flash',
-        apiKey: _apiKey,
-      );
+  // La URL base de tu backend.
+  static const String _baseUrl = 'https://neumatik-backend.up.railway.app';
 
   Future<String> analizarImagen(Uint8List imageBytes) async {
+    // 1. Obtenemos el token de autenticación del usuario.
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    if (token == null) {
+      throw Exception('No estás autenticado.');
+    }
+
+    // 2. Apuntamos a nuestro nuevo endpoint seguro en el backend.
+    final url = Uri.parse('$_baseUrl/api/ia/analizar-imagen');
+
     try {
-      // 1. Preparamos el "prompt" o la instrucción para la IA.
-      // Le decimos qué queremos que haga con la imagen.
-      final prompt = TextPart(
-        "Eres un experto en reconocimiento de autopartes con una vista de águila. Tu misión es ser **extremadamente observador**. Examina cada rincón de la imagen, busca logos, números de serie, códigos, y cualquier texto o símbolo, por más pequeño que sea. Proporciona solo la información más valiosa y relevante en español. Sé extremadamente breve y directo. Tu respuesta debe ser una lista de datos clave, usando Markdown. Incluye únicamente los siguientes puntos:\n"
-        "- **Marca:** (La marca de la pieza, si es visible. Este es el dato más importante).\n"
-        "- **Nombre de la pieza:** (Ej: Pastilla de freno, Filtro de aceite).\n"
-        "- **Modelo/Tipo:** (Si aplica, ej: para llantas, el modelo específico).\n"
-        "- **Condición estimada:** (Nuevo, Usado, Desgastado).\n"
-        "- **Número de Parte (OEM):** (Si es visible o claramente deducible).\n"
-        "- **Fecha de Creación:** (Si se puede determinar por algún código en la pieza).\n"
-        "- **Compatibilidad:** (Vehículos compatibles, si se conoce).\n\n"
-        "**Instrucción final:** Si no puedes determinar con certeza alguno de estos datos, OMITE COMPLETAMENTE la línea correspondiente. No escribas 'No disponible' ni des explicaciones.",
+      // 3. Creamos una petición 'multipart' para enviar la imagen.
+      final request = http.MultipartRequest('POST', url)
+        ..headers['Authorization'] = 'Bearer $token';
+
+      final multipartFile = http.MultipartFile.fromBytes(
+        'image', // El nombre del campo debe coincidir con el del backend: upload.single('image')
+        imageBytes,
+        filename: 'upload.jpg', // Un nombre de archivo genérico es suficiente.
       );
+      request.files.add(multipartFile);
 
-      // 2. Preparamos la imagen para ser enviada.
-      final imagePart = DataPart('image/jpeg', imageBytes);
+      // 4. Enviamos la petición y obtenemos la respuesta.
+      final streamResponse = await request.send();
+      final response = await http.Response.fromStream(streamResponse);
 
-      // 3. Enviamos la petición a la IA con el texto y la imagen.
-      final response = await _model.generateContent([
-        Content.multi([prompt, imagePart]),
-      ]);
-
-      // 4. Devolvemos la respuesta de texto generada por el modelo.
-      return response.text ?? 'No se pudo obtener una respuesta de la IA.';
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        return responseData['analysis'] ?? 'No se recibió un análisis válido.';
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['message'] ?? 'Error del servidor.');
+      }
     } catch (e) {
-      // Manejo de errores de la API.
       throw Exception(
         'Error al comunicarse con el servicio de IA: ${e.toString()}',
       );

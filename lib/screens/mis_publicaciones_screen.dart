@@ -28,6 +28,77 @@ class _MisPublicacionesScreenState extends State<MisPublicacionesScreen> {
     setState(() {}); // Notifica al widget que debe reconstruirse.
   }
 
+  // SOLUCIÓN: Función para mostrar el diálogo de confirmación y eliminar.
+  Future<void> _confirmarYEliminar(
+    String publicacionId,
+    String nombreParte,
+  ) async {
+    final bool? confirmar = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        // SOLUCIÓN: Se estiliza el AlertDialog para una mejor UX.
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15.0),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.orange),
+              SizedBox(width: 10),
+              Text('Confirmar Eliminación'),
+            ],
+          ),
+          content: Text(
+            '¿Estás seguro de que quieres eliminar la publicación "$nombreParte"? Esta acción no se puede deshacer.',
+          ),
+          actions: <Widget>[
+            // Botón para cancelar la acción.
+            OutlinedButton(
+              child: const Text('Cancelar'),
+              onPressed: () => Navigator.of(context).pop(false),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: Colors.grey.shade400),
+              ),
+            ),
+            // Botón principal para confirmar la eliminación.
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Sí, Eliminar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmar == true) {
+      try {
+        await _publicacionService.deletePublicacion(publicacionId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Publicación eliminada con éxito.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+        _reloadData(); // Recarga la lista para que desaparezca el elemento.
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error al eliminar: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,7 +158,15 @@ class _MisPublicacionesScreenState extends State<MisPublicacionesScreen> {
                     subtitle: Text(
                       'S/ ${publicacion.precio.toStringAsFixed(2)}',
                     ),
-                    trailing: const Icon(Icons.chevron_right),
+                    // SOLUCIÓN: Añadimos un botón de eliminar.
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      tooltip: 'Eliminar Publicación',
+                      onPressed: () => _confirmarYEliminar(
+                        publicacion.publicacionId,
+                        publicacion.nombreParte,
+                      ),
+                    ),
                     onTap: () {
                       // Al tocar, navega a la pantalla de detalle.
                       // Desde allí se podrá editar.

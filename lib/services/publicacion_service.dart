@@ -226,6 +226,46 @@ class PublicacionService {
     }
   }
 
+  // FUNCIÓN AÑADIDA: Para eliminar una publicación.
+  Future<void> deletePublicacion(String publicacionId) async {
+    final token = await _getToken();
+    if (token == null) {
+      throw Exception('No estás autenticado para realizar esta acción.');
+    }
+
+    final url = Uri.parse('$_baseUrl/api/publicaciones/$publicacionId');
+
+    try {
+      final response = await http.delete(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode != 200) {
+        // SOLUCIÓN: Verificamos si la respuesta es JSON antes de decodificarla.
+        try {
+          final errorBody = jsonDecode(response.body);
+          throw Exception(
+            errorBody['message'] ??
+                'Error desconocido del servidor al eliminar.',
+          );
+        } catch (e) {
+          // Si no es JSON, es probable que sea un error de "Ruta no encontrada" (404).
+          throw Exception(
+            'Error del servidor (código ${response.statusCode}). Es posible que la ruta para eliminar no exista en el backend.',
+          );
+        }
+      }
+      // Si es 200, la operación fue exitosa.
+    } catch (e) {
+      // Re-lanzamos la excepción para que la UI pueda manejarla.
+      rethrow;
+    }
+  }
+
   // Método privado para obtener el token, para no duplicar código.
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();

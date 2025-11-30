@@ -42,8 +42,64 @@ class IAService {
         final responseData = json.decode(response.body);
         return responseData['analysis'] ?? 'No se recibió un análisis válido.';
       } else {
-        final errorData = json.decode(response.body);
-        throw Exception(errorData['message'] ?? 'Error del servidor.');
+        // SOLUCIÓN: Si la respuesta no es 200, intentamos decodificar el error.
+        // Si falla (porque es HTML), mostramos un error más claro.
+        try {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['message'] ?? 'Error del servidor.');
+        } catch (e) {
+          throw Exception(
+            'El servidor devolvió una respuesta inesperada (código ${response.statusCode}). Asegúrate de que el backend esté actualizado y funcionando.',
+          );
+        }
+      }
+    } catch (e) {
+      throw Exception(
+        'Error al comunicarse con el servicio de IA: ${e.toString()}',
+      );
+    }
+  }
+
+  // SOLUCIÓN: Se mueve el método dentro de la clase IAService para corregir los errores.
+  Future<String> analizarParaCrear(Uint8List imageBytes) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    if (token == null) {
+      throw Exception('No estás autenticado.');
+    }
+
+    // Apuntamos al nuevo endpoint del backend.
+    final url = Uri.parse('$_baseUrl/api/ia/analizar-para-crear');
+
+    try {
+      final request = http.MultipartRequest('POST', url)
+        ..headers['Authorization'] = 'Bearer $token';
+
+      final multipartFile = http.MultipartFile.fromBytes(
+        'image',
+        imageBytes,
+        filename: 'upload.jpg',
+        contentType: MediaType('image', 'jpeg'),
+      );
+      request.files.add(multipartFile);
+
+      final streamResponse = await request.send();
+      final response = await http.Response.fromStream(streamResponse);
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        return responseData['analysis'] ?? 'No se recibió un análisis válido.';
+      } else {
+        // SOLUCIÓN: Se añade un manejo de errores robusto.
+        // Si la respuesta no es JSON (es HTML), se captura el error y se muestra un mensaje claro.
+        try {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['message'] ?? 'Error del servidor.');
+        } catch (e) {
+          throw Exception(
+            'El servidor devolvió una respuesta inesperada (código ${response.statusCode}). Esto puede ocurrir si hay un error en el backend. Revisa los logs del servidor.',
+          );
+        }
       }
     } catch (e) {
       throw Exception(

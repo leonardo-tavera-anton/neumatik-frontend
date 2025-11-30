@@ -222,6 +222,14 @@ class _HomeScreenState extends State<HomeScreen> {
             tooltip: 'Filtros',
             onPressed: () => _showFilterSheet(context),
           ),
+          // SOLUCIÓN: Se reincorpora el botón de acceso al reconocimiento por IA.
+          IconButton(
+            icon: const Icon(Icons.camera_alt_outlined),
+            tooltip: 'Reconocimiento por IA',
+            onPressed: () {
+              Navigator.pushNamed(context, '/ia-reconocimiento');
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.person_outline),
             tooltip: 'Mi Perfil',

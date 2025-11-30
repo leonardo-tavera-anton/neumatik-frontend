@@ -3,6 +3,7 @@ import 'dart:typed_data'; // Necesario para leer los bytes de la imagen
 import 'package:flutter/services.dart'; // Importamos para usar los formateadores de texto
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../services/ia_service.dart'; // SOLUCIÓN: Importamos el servicio de IA.
 import '../services/publicacion_service.dart';
 
 class CrearPublicacionScreen extends StatefulWidget {
@@ -15,6 +16,7 @@ class CrearPublicacionScreen extends StatefulWidget {
 class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _publicacionService = PublicacionService();
+  final _iaService = IAService(); // SOLUCIÓN: Instanciamos el servicio de IA.
 
   // Controladores para los campos del formulario
   final _nombreController = TextEditingController();
@@ -33,6 +35,8 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
   String _ciudadSeleccionada = 'Lima';
 
   bool _isLoading = false;
+  // SOLUCIÓN: Añadimos un estado de carga específico para la IA.
+  bool _isAnalyzing = false;
 
   @override
   void dispose() {
@@ -56,6 +60,83 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
         _nombreArchivo = pickedFile.name;
         _imagenEnBytes = bytes;
       });
+    }
+  }
+
+  // SOLUCIÓN: Nueva función para analizar la imagen y rellenar los campos.
+  Future<void> _analizarYCompletar() async {
+    if (_imagenEnBytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor, selecciona una imagen primero.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isAnalyzing = true);
+
+    try {
+      // SOLUCIÓN: Llamamos al nuevo método específico para esta pantalla.
+      final analysis = await _iaService.analizarParaCrear(_imagenEnBytes!);
+      _parseAndFillForm(analysis);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error en el análisis: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isAnalyzing = false);
+      }
+    }
+  }
+
+  // SOLUCIÓN: Función para parsear la respuesta de la IA y rellenar el formulario.
+  void _parseAndFillForm(String analysis) {
+    final lines = analysis.split('\n');
+    final validConditions = ['Nuevo', 'Usado', 'Reacondicionado'];
+    final Map<String, int> categoriasMap = {
+      'Frenos': 1,
+      'Suspensión y Dirección': 2,
+      'Motor': 3,
+      'Filtros': 4,
+      'Sistema Eléctrico': 5,
+      'Carrocería': 6,
+      'Neumáticos y Ruedas': 7,
+    };
+
+    for (final line in lines) {
+      if (line.contains(':')) {
+        final parts = line.split(':');
+        final key = parts[0].replaceAll(RegExp(r'[\*\-]'), '').trim();
+        final value = parts.sublist(1).join(':').trim();
+
+        if (key == 'Nombre de la pieza' && value.isNotEmpty) {
+          _nombreController.text = value;
+        } else if (key == 'Número de Parte (OEM)' && value.isNotEmpty) {
+          _oemController.text = value;
+        } else if (key == 'Condición estimada' &&
+            validConditions.contains(value) &&
+            value.isNotEmpty) {
+          setState(() {
+            _condicionSeleccionada = value;
+          });
+        } else if (key == 'Categoría' && categoriasMap.containsKey(value)) {
+          setState(() {
+            _categoriaSeleccionada = categoriasMap[value]!;
+          });
+        } else if (key == 'Descripción corta' && value.isNotEmpty) {
+          _descripcionController.text = value;
+        } else if (key == 'Precio estimado (S/)' && value.isNotEmpty) {
+          // Tomamos el primer número del rango como sugerencia.
+          _precioController.text = value
+              .split('-')[0]
+              .replaceAll(RegExp(r'[^0-9.]'), '')
+              .trim();
+        }
+      }
     }
   }
 
@@ -203,6 +284,31 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
                 ),
               ),
               const SizedBox(height: 20),
+
+              // SOLUCIÓN: Botón para analizar con IA, solo visible si hay una imagen.
+              if (_imagenEnBytes != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0),
+                  child: ElevatedButton.icon(
+                    onPressed: _isAnalyzing ? null : _analizarYCompletar,
+                    icon: _isAnalyzing
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.rocket_launch_outlined),
+                    label: Text(
+                      _isAnalyzing
+                          ? 'Analizando...'
+                          : 'Analizar con IA para autocompletar',
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade700,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
 
               // Campos de texto
               TextFormField(

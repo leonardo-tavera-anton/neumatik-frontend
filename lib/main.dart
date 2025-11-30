@@ -62,9 +62,9 @@ class MyApp extends StatelessWidget {
                   as Map<String, dynamic>;
           return EditPerfilScreen(perfil: perfilActual);
         },
-        // SOLUCIÓN: Añadimos la ruta para la pantalla de "Mis Publicaciones".
+        // Ruta para la pantalla de mis publicaciones
         '/mis-publicaciones': (context) => const MisPublicacionesScreen(),
-        // SOLUCIÓN: Añadimos la ruta para la pantalla de edición de publicaciones.
+        // Ruta para la pantalla de edición de publicaciones
         '/edit-publicacion': (context) {
           final publicacion =
               ModalRoute.of(context)!.settings.arguments
@@ -76,7 +76,7 @@ class MyApp extends StatelessWidget {
         // Extrae el ID de los argumentos de la ruta.
         '/publicacion': (context) {
           final arguments = ModalRoute.of(context)!.settings.arguments;
-          // SOLUCIÓN: Se añade una verificación para evitar errores durante el hot restart
+          // verificación para evitar errores durante el hot restart
           // si los argumentos se pierden.
           if (arguments is String) {
             return DetallePublicacionScreen(publicacionId: arguments);

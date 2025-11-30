@@ -88,9 +88,7 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Neumatik AI: Reconocimiento de Partes'),
-      ),
+      appBar: AppBar(title: const Text('Neumatik AI: Autopartes')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

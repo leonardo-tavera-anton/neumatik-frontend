@@ -23,10 +23,11 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
   late TextEditingController _precioController;
   late TextEditingController _stockController;
   late TextEditingController _descripcionController;
-  late TextEditingController _ciudadController;
   late TextEditingController _oemController;
 
   late String _condicionSeleccionada;
+  late String
+  _ciudadSeleccionada; // SOLUCIÓN: Variable para el dropdown de ciudad.
   late int _categoriaSeleccionada;
 
   bool _isLoading = false;
@@ -47,13 +48,19 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
     _descripcionController = TextEditingController(
       text: widget.publicacion.descripcionCorta ?? '',
     );
-    _ciudadController = TextEditingController(
-      text: widget.publicacion.ubicacionCiudad,
-    );
     _oemController = TextEditingController(
       text: widget.publicacion.numeroOem ?? '',
     );
 
+    // SOLUCIÓN DEFINITIVA: Verificamos si la ciudad guardada existe en nuestra lista de ciudades.
+    // Si no existe (ej. "A" o un valor inválido), se asigna null para evitar el crash.
+    final ciudadGuardada = widget.publicacion.ubicacionCiudad;
+    if (_getCiudadesPrincipales().contains(ciudadGuardada)) {
+      _ciudadSeleccionada = ciudadGuardada;
+    } else {
+      _ciudadSeleccionada =
+          _getCiudadesPrincipales()[0]; // Se asigna la primera ciudad de la lista como valor por defecto.
+    }
     _condicionSeleccionada = widget.publicacion.condicion;
     // NOTA: Esto asume que tienes una forma de mapear el nombre de la categoría a su ID.
     // Para este ejemplo, lo dejaremos con un valor fijo si no se puede mapear.
@@ -81,9 +88,34 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
     _precioController.dispose();
     _stockController.dispose();
     _descripcionController.dispose();
-    _ciudadController.dispose();
     _oemController.dispose();
     super.dispose();
+  }
+
+  // SOLUCIÓN: Se añade la lista de ciudades para el dropdown.
+  List<String> _getCiudadesPrincipales() {
+    return [
+      'Lima',
+      'Arequipa',
+      'Trujillo',
+      'Chiclayo',
+      'Chimbote',
+      'Chincha Alta',
+      'Cusco',
+      'Huancayo',
+      'Huánuco',
+      'Huaraz',
+      'Ica',
+      'Iquitos',
+      'Nuevo Chimbote',
+      'Juliaca',
+      'Piura',
+      'Pucallpa',
+      'Puno',
+      'Sullana',
+      'Tacna',
+      'Tumbes',
+    ]..sort();
   }
 
   Future<void> _submitUpdate() async {
@@ -104,7 +136,8 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
         precio: double.parse(_precioController.text),
         condicion: _condicionSeleccionada,
         stock: int.parse(_stockController.text),
-        ubicacionCiudad: _ciudadController.text,
+        ubicacionCiudad:
+            _ciudadSeleccionada, // SOLUCIÓN: Se usa el valor del dropdown.
         numeroOem: _oemController.text,
         descripcionCorta: _descripcionController.text,
       );
@@ -194,15 +227,6 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
               ),
               const SizedBox(height: 12),
               TextFormField(
-                controller: _ciudadController,
-                decoration: const InputDecoration(
-                  labelText: 'Ciudad de Ubicación',
-                ),
-                validator: (v) =>
-                    v!.isEmpty ? 'La ciudad es obligatoria' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
                 controller: _descripcionController,
                 decoration: const InputDecoration(
                   labelText: 'Descripción Corta',
@@ -227,6 +251,23 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
                 onChanged: (value) =>
                     setState(() => _condicionSeleccionada = value!),
                 decoration: const InputDecoration(labelText: 'Condición'),
+              ),
+              const SizedBox(height: 20),
+
+              // SOLUCIÓN: Se reemplaza el campo de texto de ciudad por un Dropdown.
+              DropdownButtonFormField<String>(
+                value: _ciudadSeleccionada,
+                items: _getCiudadesPrincipales()
+                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _ciudadSeleccionada = value);
+                  }
+                },
+                decoration: const InputDecoration(
+                  labelText: 'Ciudad de Ubicación',
+                ),
               ),
               const SizedBox(height: 20),
               DropdownButtonFormField<int>(

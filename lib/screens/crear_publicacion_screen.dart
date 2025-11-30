@@ -21,7 +21,6 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
   final _precioController = TextEditingController();
   final _stockController = TextEditingController();
   final _descripcionController = TextEditingController();
-  final _ciudadController = TextEditingController();
   final _oemController = TextEditingController();
 
   // Variables para la imagen y los dropdowns
@@ -30,6 +29,8 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
   String? _nombreArchivo; // Para la subida
   String _condicionSeleccionada = 'Nuevo';
   int _categoriaSeleccionada = 1; // Default a 'Frenos'
+  // SOLUCIÓN: Se añade la variable para el dropdown de ciudad, con un valor por defecto.
+  String _ciudadSeleccionada = 'Lima';
 
   bool _isLoading = false;
 
@@ -39,7 +40,6 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
     _precioController.dispose();
     _stockController.dispose();
     _descripcionController.dispose();
-    _ciudadController.dispose();
     _oemController.dispose();
     super.dispose();
   }
@@ -92,7 +92,8 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
         precio: double.parse(_precioController.text),
         condicion: _condicionSeleccionada,
         stock: int.parse(_stockController.text),
-        ubicacionCiudad: _ciudadController.text,
+        ubicacionCiudad:
+            _ciudadSeleccionada, // SOLUCIÓN: Se usa el valor del dropdown.
         numeroOem: _oemController.text,
         descripcionCorta: _descripcionController.text,
         fotoUrl: fotoUrl,
@@ -123,6 +124,33 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  // SOLUCIÓN: Se añade la lista de ciudades para el dropdown.
+  // SOLUCIÓN: Se amplía la lista para que coincida con los filtros de búsqueda.
+  List<String> _getCiudadesPrincipales() {
+    return [
+      'Lima',
+      'Arequipa',
+      'Trujillo',
+      'Chiclayo',
+      'Chimbote',
+      'Chincha Alta',
+      'Cusco',
+      'Huancayo',
+      'Huánuco',
+      'Huaraz',
+      'Ica',
+      'Iquitos',
+      'Nuevo Chimbote',
+      'Juliaca',
+      'Piura',
+      'Pucallpa',
+      'Puno',
+      'Sullana',
+      'Tacna',
+      'Tumbes',
+    ]..sort();
   }
 
   @override
@@ -226,15 +254,6 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
               ),
               const SizedBox(height: 12),
               TextFormField(
-                controller: _ciudadController,
-                decoration: const InputDecoration(
-                  labelText: 'Ciudad de Ubicación',
-                ),
-                validator: (v) =>
-                    v!.isEmpty ? 'La ciudad es obligatoria' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
                 controller: _descripcionController,
                 decoration: const InputDecoration(
                   labelText: 'Descripción Corta (Opcional)',
@@ -261,6 +280,24 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
                     setState(() => _condicionSeleccionada = value);
                 },
                 decoration: const InputDecoration(labelText: 'Condición'),
+              ),
+              const SizedBox(height: 20),
+
+              // SOLUCIÓN: Se reemplaza el campo de texto de ciudad por un Dropdown.
+              DropdownButtonFormField<String>(
+                value: _ciudadSeleccionada,
+                items: _getCiudadesPrincipales()
+                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _ciudadSeleccionada = value);
+                  }
+                },
+                decoration: const InputDecoration(
+                  labelText: 'Ciudad de Ubicación',
+                ),
+                validator: (v) => v == null ? 'La ciudad es obligatoria' : null,
               ),
               const SizedBox(height: 20),
               // NOTA: Este Dropdown de categorías debería llenarse desde la DB.

@@ -10,7 +10,6 @@ class Usuario {
   final String apellido;
   final String correo;
   final String? telefono;
-  final bool esVendedor;
 
   Usuario({
     required this.id,
@@ -18,10 +17,10 @@ class Usuario {
     required this.apellido, // Vuelve a ser requerido
     required this.correo,
     this.telefono, // Sigue siendo opcional (acepta NULL en DB)
-    required this.esVendedor,
   });
 
-  String get nombreCompleto => '$nombre ${apellido ?? ''}'.trim(); //no es codigo muerto
+  String get nombreCompleto =>
+      '$nombre ${apellido ?? ''}'.trim(); //no es codigo muerto
 
   // Factory para crear una instancia de Usuario a partir de un mapa JSON
   factory Usuario.fromJson(Map<String, dynamic> json) {
@@ -29,13 +28,6 @@ class Usuario {
     // ya sea que venga como String o int del backend.
     final rawId = json['id'] ?? json['user_id'];
     final idString = rawId != null ? rawId.toString() : '';
-
-    // Lógica robusta para 'esVendedor'
-    final esVendedorRaw = json['es_vendedor'] ?? json['esVendedor'] ?? false;
-    final bool isSeller = esVendedorRaw is bool
-        ? esVendedorRaw
-        : esVendedorRaw == 1 ||
-              esVendedorRaw.toString().toLowerCase() == 'true';
 
     return Usuario(
       id: idString,
@@ -46,7 +38,6 @@ class Usuario {
       correo: json['correo'] as String,
       // Se permite que sea nulo si no viene del JSON o viene como null
       telefono: json['telefono'] as String?,
-      esVendedor: isSeller,
     );
   }
 
@@ -58,7 +49,5 @@ class Usuario {
     'correo': correo,
     // SIMPLIFICACIÓN: Enviamos el valor directamente. La DB ahora tiene un DEFAULT.
     'telefono': telefono ?? '',
-    // El backend de Node.js/Express.js generalmente prefiere booleanos si está configurado
-    'es_vendedor': esVendedor,
   };
 }

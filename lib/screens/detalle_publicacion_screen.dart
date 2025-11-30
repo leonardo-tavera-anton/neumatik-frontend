@@ -25,8 +25,6 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
       AuthService(); // SOLUCIÓN: Para verificar el dueño.
 
   late Future<PublicacionAutoparte> _publicacionFuture;
-  bool _esPropietario = false; // Estado para saber si el usuario es el dueño.
-
   @override
   void initState() {
     super.initState();
@@ -34,6 +32,7 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
   }
 
   // SOLUCIÓN: Nueva función para cargar todo y verificar si el usuario es el dueño.
+  bool _esPropietario = false; // Estado para saber si el usuario es el dueño.
   Future<void> _cargarDatosYVerificarPropietario() async {
     // Iniciamos la carga de la publicación.
     final future = _publicacionService.getPublicacionById(widget.publicacionId);
@@ -218,6 +217,17 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
                         const Divider(height: 32),
                       ],
 
+                      // SOLUCIÓN: Se añade la categoría de la publicación.
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(
+                          Icons.category_outlined,
+                          color: Colors.teal,
+                        ),
+                        title: const Text('Categoría'),
+                        subtitle: Text(publicacion.categoria),
+                      ),
+
                       // Vendedor y Ubicación
                       ListTile(
                         contentPadding: EdgeInsets.zero,
@@ -239,16 +249,18 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
                       ),
                       const SizedBox(height: 24),
                       // Botón de Añadir al Carrito
-                      ElevatedButton.icon(
-                        onPressed: () => _anadirAlCarrito(publicacion),
-                        icon: const Icon(Icons.add_shopping_cart),
-                        label: const Text('Añadir al Carrito'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(double.infinity, 50),
+                      // SIMPLIFICACIÓN: El botón se muestra si el usuario NO es el propietario.
+                      if (!_esPropietario)
+                        ElevatedButton.icon(
+                          onPressed: () => _anadirAlCarrito(publicacion),
+                          icon: const Icon(Icons.add_shopping_cart),
+                          label: const Text('Añadir al Carrito'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.teal,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(double.infinity, 50),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),

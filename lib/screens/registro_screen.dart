@@ -21,8 +21,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
   final TextEditingController _contrasenaController = TextEditingController();
   final TextEditingController _telefonoController = TextEditingController();
 
-  // VARIABLE AÑADIDA: Para saber si el usuario se registra como vendedor
-  bool _esVendedor = false;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -55,7 +53,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
           contrasena: _contrasenaController.text,
           // SIMPLIFICACIÓN: Enviamos el valor directamente. La DB ahora maneja los vacíos.
           telefono: _telefonoController.text.trim(),
-          esVendedor: _esVendedor, // AÑADIDO
         );
 
         // Registro exitoso, usamos el objeto Usuario devuelto
@@ -195,23 +192,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 15), // Espacio para el Checkbox
-              // --- Checkbox Es Vendedor (Reincorporado) ---
-              Row(
-                children: [
-                  Checkbox(
-                    value: _esVendedor,
-                    onChanged: (bool? newValue) {
-                      setState(() {
-                        _esVendedor = newValue ?? false;
-                      });
-                    },
-                    activeColor: Colors.teal,
-                  ),
-                  const Text('Quiero registrarme como Vendedor'),
-                ],
               ),
 
               const SizedBox(height: 15),

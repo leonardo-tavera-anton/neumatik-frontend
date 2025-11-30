@@ -15,6 +15,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   // Usamos el servicio de publicaciones correcto.
   final PublicacionService _publicacionService = PublicacionService();
+  // SOLUCIÓN: Se añade el servicio de autenticación para verificar el rol del usuario.
+  final AuthService _authService = AuthService();
   // Mantenemos una lista completa y una lista filtrada en el estado.
   List<PublicacionAutoparte> _allPublicaciones = [];
   List<PublicacionAutoparte> _filteredPublicaciones = [];
@@ -24,8 +26,8 @@ class _HomeScreenState extends State<HomeScreen> {
   // Controladores y variables para la búsqueda y filtros
   final TextEditingController _searchController = TextEditingController();
   String? _selectedCategoria;
+  String? _selectedCiudad; // SOLUCIÓN: Variable para el dropdown de ciudad.
   String? _selectedCondicion;
-  final TextEditingController _ciudadController = TextEditingController();
   final TextEditingController _minPrecioController = TextEditingController();
   final TextEditingController _maxPrecioController = TextEditingController();
 
@@ -40,7 +42,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _searchController.removeListener(_applyFiltersAndSearch);
     _searchController.dispose();
-    _ciudadController.dispose();
     _minPrecioController.dispose();
     _maxPrecioController.dispose();
     super.dispose();
@@ -59,7 +60,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ); // Reconstruye para mostrar el indicador de RefreshIndicator
     }
     try {
+      // SIMPLIFICACIÓN: Solo necesitamos cargar las publicaciones.
       final publications = await _publicacionService.getPublicacionesActivas();
+
       setState(() {
         _allPublicaciones = publications;
         _filteredPublicaciones = publications;
@@ -101,11 +104,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     // 4. Filtro por ciudad
-    final ciudadQuery = _ciudadController.text.toLowerCase();
-    if (ciudadQuery.isNotEmpty) {
+    if (_selectedCiudad != null) {
       tempFilteredList = tempFilteredList.where((p) {
-        return p.ubicacionCiudad.toLowerCase().contains(ciudadQuery);
-      }).toList();
+        return p.ubicacionCiudad == _selectedCiudad;
+      }).toList(); // Comparamos exactamente con la ciudad seleccionada.
     }
 
     // 5. Filtro por precio mínimo
@@ -132,12 +134,12 @@ class _HomeScreenState extends State<HomeScreen> {
   // Limpia todos los filtros y la búsqueda
   void _clearFilters() {
     _searchController.clear();
-    _ciudadController.clear();
     _minPrecioController.clear();
     _maxPrecioController.clear();
     setState(() {
       _selectedCategoria = null;
       _selectedCondicion = null;
+      _selectedCiudad = null; // SOLUCIÓN: Limpiamos la ciudad seleccionada.
       _filteredPublicaciones = _allPublicaciones;
     });
     Navigator.pop(context); // Cierra el BottomSheet
@@ -154,23 +156,66 @@ class _HomeScreenState extends State<HomeScreen> {
     return _allPublicaciones.map((p) => p.categoria).toSet().toList();
   }
 
+  // SOLUCIÓN: Lista de las principales ciudades de Perú.
+  // SOLUCIÓN: Se amplía la lista de ciudades para incluir más centros urbanos importantes.
+  List<String> _getCiudadesPrincipales() {
+    return [
+      'Lima',
+      'Arequipa',
+      'Trujillo',
+      'Chiclayo',
+      'Chimbote',
+      'Chincha Alta',
+      'Cusco',
+      'Huancayo',
+      'Huánuco',
+      'Huaraz',
+      'Ica',
+      'Iquitos',
+      'Nuevo Chimbote',
+      'Juliaca',
+      'Piura',
+      'Pucallpa',
+      'Puno',
+      'Sullana',
+      'Tacna',
+      'Tumbes',
+    ]..sort(); // Las ordenamos alfabéticamente.
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // El Drawer que añadiremos después añade el botón de menú (hamburguesa)
-        // SOLUCIÓN: Barra de búsqueda integrada en el AppBar
-        title: TextField(
-          controller: _searchController,
-          decoration: InputDecoration(
-            hintText: 'Buscar por nombre...',
-            prefixIcon: const Icon(Icons.search, color: Colors.white),
-            hintStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
-            border: InputBorder.none,
-          ),
-          style: const TextStyle(color: Colors.white),
-        ),
+        // SOLUCIÓN: Se restaura el título centrado "Neumatik".
+        title: const Text('Neumatik'),
+        centerTitle: true,
         backgroundColor: Colors.teal,
+        // SOLUCIÓN: La barra de búsqueda se coloca en la parte inferior del AppBar.
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60.0),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12.0,
+              vertical: 8.0,
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30.0),
+              ),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Buscar por nombre de autoparte...',
+                  prefixIcon: Icon(Icons.search, color: Colors.grey.shade600),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14.0),
+                ),
+              ),
+            ),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list),
@@ -186,8 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      drawer:
-          const AppDrawer(), // SOLUCIÓN: Se vuelve a añadir el Drawer al Scaffold.
+      drawer: const AppDrawer(), // SOLUCIÓN: Se restaura el menú lateral.
       body: RefreshIndicator(
         onRefresh: _reloadData,
         color: Colors.teal,
@@ -229,6 +273,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       // MEJORA: Botón flotante para crear nuevas publicaciones.
       // Es un estándar de UX en apps móviles.
+      // SIMPLIFICACIÓN: El botón "Vender" ahora es visible para todos.
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.pushNamed(context, '/crear-publicacion');
@@ -236,8 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
         label: const Text('Vender'),
         icon: const Icon(Icons.add_circle_outline),
         backgroundColor: Colors.teal.shade700,
-        foregroundColor: Colors
-            .white, // CORRECCIÓN: Asegura que el texto y el ícono sean blancos
+        foregroundColor: Colors.white,
       ),
     );
   }
@@ -303,11 +347,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 16),
 
                     // Filtro por Ciudad
-                    TextFormField(
-                      controller: _ciudadController,
-                      decoration: const InputDecoration(
-                        labelText: 'Ciudad de Ubicación',
-                      ),
+                    // SOLUCIÓN: Reemplazamos el TextFormField por un Dropdown.
+                    DropdownButtonFormField<String>(
+                      value: _selectedCiudad,
+                      hint: const Text('Seleccionar Ciudad'),
+                      items: _getCiudadesPrincipales()
+                          .map(
+                            (c) => DropdownMenuItem(value: c, child: Text(c)),
+                          )
+                          .toList(),
+                      onChanged: (value) =>
+                          setModalState(() => _selectedCiudad = value),
+                      decoration: const InputDecoration(labelText: 'Ciudad'),
                     ),
                     const SizedBox(height: 16),
 
@@ -377,27 +428,36 @@ class AppDrawer extends StatefulWidget {
 
 class _AppDrawerState extends State<AppDrawer> {
   final AuthService _authService = AuthService();
-  bool _esVendedor = false;
+  String? _nombreUsuario;
 
   @override
   void initState() {
     super.initState();
-    _verificarRolVendedor();
+    _cargarDatosDeUsuario();
   }
 
-  // Verifica si el usuario es vendedor para mostrar opciones adicionales.
-  Future<void> _verificarRolVendedor() async {
+  Future<void> _cargarDatosDeUsuario() async {
     try {
-      // Usamos el mismo servicio que la pantalla de perfil.
       final perfilData = await _authService.fetchUserProfile();
       final perfil = perfilData['user'] as Map<String, dynamic>;
-      if (mounted && perfil['es_vendedor'] == true) {
+      if (mounted) {
         setState(() {
-          _esVendedor = true;
+          _nombreUsuario = perfil['nombre'] as String?;
         });
       }
     } catch (e) {
-      // Si hay un error (ej. token expirado), no se muestra la opción.
+      // No hacer nada si falla, el menú se mostrará con menos opciones.
+    }
+  }
+
+  String _obtenerSaludo() {
+    final hora = DateTime.now().hour;
+    if (hora < 12) {
+      return 'Buenos días';
+    } else if (hora < 19) {
+      return 'Buenas tardes';
+    } else {
+      return 'Buenas noches';
     }
   }
 
@@ -407,32 +467,35 @@ class _AppDrawerState extends State<AppDrawer> {
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          const DrawerHeader(
-            decoration: BoxDecoration(
+          DrawerHeader(
+            decoration: const BoxDecoration(
               color: Colors.teal,
               image: DecorationImage(
                 fit: BoxFit.cover,
                 image: NetworkImage(
-                  'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?q=80&w=2070', // Imagen de fondo genérica
+                  'https://res.cloudinary.com/dfej71ufs/image/upload/v1764488154/neumatik_banner_yh8c44.jpg',
                 ),
                 opacity: 0.3,
               ),
             ),
-            child: Text(
-              'Neumatik App',
-              style: TextStyle(color: Colors.white, fontSize: 24),
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: Text(
+                '${_obtenerSaludo()}, ${_nombreUsuario ?? ''}',
+                style: const TextStyle(color: Colors.white, fontSize: 22),
+              ),
             ),
           ),
           ListTile(
             leading: const Icon(Icons.home_outlined),
             title: const Text('Inicio'),
-            onTap: () => Navigator.pop(context), // Cierra el drawer
+            onTap: () => Navigator.pop(context),
           ),
           ListTile(
             leading: const Icon(Icons.person_outline),
             title: const Text('Mi Perfil'),
             onTap: () {
-              Navigator.pop(context); // Cierra el drawer primero
+              Navigator.pop(context);
               Navigator.pushNamed(context, '/perfil');
             },
           ),
@@ -444,39 +507,30 @@ class _AppDrawerState extends State<AppDrawer> {
               Navigator.pushNamed(context, '/carrito');
             },
           ),
-          // Opción "Mis Publicaciones" solo para vendedores.
-          if (_esVendedor)
-            ListTile(
-              leading: const Icon(Icons.store_mall_directory_outlined),
-              title: const Text('Mis Publicaciones'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/mis-publicaciones');
-              },
-            ),
+          // SIMPLIFICACIÓN: La opción "Mis Publicaciones" ahora es visible para todos.
+          ListTile(
+            leading: const Icon(Icons.store_mall_directory_outlined),
+            title: const Text('Mis Publicaciones'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/mis-publicaciones');
+            },
+          ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text('Cerrar Sesión'),
-            onTap: () => _logout(context), // Llama a la función de logout
+            onTap: () async {
+              await _authService.logout();
+              if (mounted)
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil('/login', (route) => false);
+            },
           ),
         ],
       ),
     );
-  }
-
-  // Función para manejar el logout desde el Drawer.
-  void _logout(BuildContext context) async {
-    try {
-      await _authService.logout();
-      if (context.mounted) {
-        Navigator.of(
-          context,
-        ).pushNamedAndRemoveUntil('/login', (route) => false);
-      }
-    } catch (e) {
-      // Manejo de error si el logout falla
-    }
   }
 }
 

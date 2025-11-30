@@ -72,7 +72,6 @@ class AuthService {
     required String correo,
     required String contrasena,
     required String telefono,
-    required bool esVendedor,
   }) async {
     final url = Uri.parse('$_baseUrl$_registerEndpoint');
 
@@ -83,7 +82,6 @@ class AuthService {
       // Se usa 'contrasena' para coincidir con el backend JS
       'contrasena': contrasena,
       'telefono': telefono,
-      'es_vendedor': esVendedor,
     });
 
     try {

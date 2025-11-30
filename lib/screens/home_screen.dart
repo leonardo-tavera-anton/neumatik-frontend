@@ -15,98 +15,217 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   // Usamos el servicio de publicaciones correcto.
   final PublicacionService _publicacionService = PublicacionService();
-  late Future<List<PublicacionAutoparte>> _publicacionesFuture;
+  // Mantenemos una lista completa y una lista filtrada en el estado.
+  List<PublicacionAutoparte> _allPublicaciones = [];
+  List<PublicacionAutoparte> _filteredPublicaciones = [];
+  bool _isLoading = true;
+  String? _error;
+
+  // Controladores y variables para la búsqueda y filtros
+  final TextEditingController _searchController = TextEditingController();
+  String? _selectedCategoria;
+  String? _selectedCondicion;
+  final TextEditingController _ciudadController = TextEditingController();
+  final TextEditingController _minPrecioController = TextEditingController();
+  final TextEditingController _maxPrecioController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _publicacionesFuture = _publicacionService.getPublicacionesActivas();
+    _loadData();
+    _searchController.addListener(_applyFiltersAndSearch);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_applyFiltersAndSearch);
+    _searchController.dispose();
+    _ciudadController.dispose();
+    _minPrecioController.dispose();
+    _maxPrecioController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadData() async {
+    await _reloadData();
   }
 
   // Función para recargar los datos con RefreshIndicator
   Future<void> _reloadData() async {
+    // Para evitar un parpadeo, solo mostramos el indicador de carga si no es la carga inicial.
+    if (!_isLoading) {
+      setState(
+        () {},
+      ); // Reconstruye para mostrar el indicador de RefreshIndicator
+    }
+    try {
+      final publications = await _publicacionService.getPublicacionesActivas();
+      setState(() {
+        _allPublicaciones = publications;
+        _filteredPublicaciones = publications;
+        _isLoading = false;
+        _error = null; // Limpiamos errores previos si la carga es exitosa
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Lógica central para aplicar todos los filtros y la búsqueda
+  void _applyFiltersAndSearch() {
+    List<PublicacionAutoparte> tempFilteredList = _allPublicaciones;
+
+    // 1. Filtro de búsqueda por texto
+    final searchQuery = _searchController.text.toLowerCase();
+    if (searchQuery.isNotEmpty) {
+      tempFilteredList = tempFilteredList.where((p) {
+        return p.nombreParte.toLowerCase().contains(searchQuery);
+      }).toList();
+    }
+
+    // 2. Filtro por categoría
+    if (_selectedCategoria != null) {
+      tempFilteredList = tempFilteredList.where((p) {
+        return p.categoria == _selectedCategoria;
+      }).toList();
+    }
+
+    // 3. Filtro por condición
+    if (_selectedCondicion != null) {
+      tempFilteredList = tempFilteredList.where((p) {
+        return p.condicion == _selectedCondicion;
+      }).toList();
+    }
+
+    // 4. Filtro por ciudad
+    final ciudadQuery = _ciudadController.text.toLowerCase();
+    if (ciudadQuery.isNotEmpty) {
+      tempFilteredList = tempFilteredList.where((p) {
+        return p.ubicacionCiudad.toLowerCase().contains(ciudadQuery);
+      }).toList();
+    }
+
+    // 5. Filtro por precio mínimo
+    final minPrecio = double.tryParse(_minPrecioController.text);
+    if (minPrecio != null) {
+      tempFilteredList = tempFilteredList.where((p) {
+        return p.precio >= minPrecio;
+      }).toList();
+    }
+
+    // 6. Filtro por precio máximo
+    final maxPrecio = double.tryParse(_maxPrecioController.text);
+    if (maxPrecio != null) {
+      tempFilteredList = tempFilteredList.where((p) {
+        return p.precio <= maxPrecio;
+      }).toList();
+    }
+
     setState(() {
-      _publicacionesFuture = _publicacionService.getPublicacionesActivas();
+      _filteredPublicaciones = tempFilteredList;
     });
+  }
+
+  // Limpia todos los filtros y la búsqueda
+  void _clearFilters() {
+    _searchController.clear();
+    _ciudadController.clear();
+    _minPrecioController.clear();
+    _maxPrecioController.clear();
+    setState(() {
+      _selectedCategoria = null;
+      _selectedCondicion = null;
+      _filteredPublicaciones = _allPublicaciones;
+    });
+    Navigator.pop(context); // Cierra el BottomSheet
+  }
+
+  // Aplica los filtros del BottomSheet
+  void _applyFiltersFromSheet() {
+    _applyFiltersAndSearch();
+    Navigator.pop(context); // Cierra el BottomSheet
+  }
+
+  // Extrae las categorías únicas de las publicaciones
+  List<String> _getUniqueCategories() {
+    return _allPublicaciones.map((p) => p.categoria).toSet().toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // El Drawer automáticamente añade el botón de menú (hamburguesa)
-        title: const Text('Neumatik: Autopartes en Venta'),
+        // El Drawer que añadiremos después añade el botón de menú (hamburguesa)
+        // SOLUCIÓN: Barra de búsqueda integrada en el AppBar
+        title: TextField(
+          controller: _searchController,
+          decoration: InputDecoration(
+            hintText: 'Buscar por nombre...',
+            prefixIcon: const Icon(Icons.search, color: Colors.white),
+            hintStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
+            border: InputBorder.none,
+          ),
+          style: const TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.teal,
         actions: [
           IconButton(
-            icon: const Icon(Icons.person),
+            icon: const Icon(Icons.filter_list),
+            tooltip: 'Filtros',
+            onPressed: () => _showFilterSheet(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.person_outline),
             tooltip: 'Mi Perfil',
             onPressed: () {
               Navigator.pushNamed(context, '/perfil');
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.camera_alt_outlined),
-            tooltip: 'Reconocimiento por IA',
-            onPressed: () {
-              Navigator.pushNamed(context, '/ia-reconocimiento');
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.shopping_cart_outlined),
-            tooltip: 'Carrito de Compras',
-            onPressed: () {
-              Navigator.pushNamed(context, '/carrito');
-            },
-          ),
         ],
       ),
-      // MEJORA: Se añade el menú lateral (Drawer).
-      drawer: const AppDrawer(),
+      drawer:
+          const AppDrawer(), // SOLUCIÓN: Se vuelve a añadir el Drawer al Scaffold.
       body: RefreshIndicator(
         onRefresh: _reloadData,
         color: Colors.teal,
-        child: FutureBuilder<List<PublicacionAutoparte>>(
-          future: _publicacionesFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: Colors.teal))
+            : _error != null
+            ? Center(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Text(
-                    'Error al cargar publicaciones: ${snapshot.error.toString().replaceFirst("Exception: ", "")}',
+                    'Error al cargar publicaciones: $_error',
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: Colors.red),
                   ),
                 ),
-              );
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(
-                child: Text('No hay publicaciones disponibles.'),
-              );
-            }
-
-            final publicaciones = snapshot.data!;
-            return ListView.builder(
-              itemCount: publicaciones.length,
-              itemBuilder: (context, index) {
-                final publicacion = publicaciones[index];
-                return InkWell(
-                  onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/publicacion',
-                      arguments: publicacion.publicacionId,
-                    );
-                  },
-                  child: AutoparteCard(publicacion: publicacion),
-                );
-              },
-            );
-          },
-        ),
+              )
+            : _filteredPublicaciones.isEmpty
+            ? const Center(
+                child: Text(
+                  'No se encontraron publicaciones con esos criterios.',
+                ),
+              )
+            : ListView.builder(
+                itemCount: _filteredPublicaciones.length,
+                itemBuilder: (context, index) {
+                  final publicacion = _filteredPublicaciones[index];
+                  return InkWell(
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        '/publicacion',
+                        arguments: publicacion.publicacionId,
+                      );
+                    },
+                    child: AutoparteCard(publicacion: publicacion),
+                  );
+                },
+              ),
       ),
       // MEJORA: Botón flotante para crear nuevas publicaciones.
       // Es un estándar de UX en apps móviles.
@@ -117,12 +236,138 @@ class _HomeScreenState extends State<HomeScreen> {
         label: const Text('Vender'),
         icon: const Icon(Icons.add_circle_outline),
         backgroundColor: Colors.teal.shade700,
+        foregroundColor: Colors
+            .white, // CORRECCIÓN: Asegura que el texto y el ícono sean blancos
       ),
+    );
+  }
+
+  // Muestra el panel de filtros
+  void _showFilterSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // Permite que el sheet sea más alto
+      builder: (context) {
+        // Usamos un StatefulBuilder para que los cambios en los dropdowns se reflejen dentro del sheet
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 20,
+                right: 20,
+                top: 20,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'Filtros de Búsqueda',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Divider(height: 20),
+
+                    // Filtro por Categoría
+                    DropdownButtonFormField<String>(
+                      value: _selectedCategoria,
+                      hint: const Text('Seleccionar Categoría'),
+                      items: _getUniqueCategories()
+                          .map(
+                            (c) => DropdownMenuItem(value: c, child: Text(c)),
+                          )
+                          .toList(),
+                      onChanged: (value) =>
+                          setModalState(() => _selectedCategoria = value),
+                      decoration: const InputDecoration(labelText: 'Categoría'),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Filtro por Condición
+                    DropdownButtonFormField<String>(
+                      value: _selectedCondicion,
+                      hint: const Text('Seleccionar Condición'),
+                      items: ['Nuevo', 'Usado', 'Reacondicionado']
+                          .map(
+                            (c) => DropdownMenuItem(value: c, child: Text(c)),
+                          )
+                          .toList(),
+                      onChanged: (value) =>
+                          setModalState(() => _selectedCondicion = value),
+                      decoration: const InputDecoration(labelText: 'Condición'),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Filtro por Ciudad
+                    TextFormField(
+                      controller: _ciudadController,
+                      decoration: const InputDecoration(
+                        labelText: 'Ciudad de Ubicación',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Filtro por Precio
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _minPrecioController,
+                            decoration: const InputDecoration(
+                              labelText: 'Precio Mín.',
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _maxPrecioController,
+                            decoration: const InputDecoration(
+                              labelText: 'Precio Máx.',
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 30),
+
+                    // Botones de Acción
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: _clearFilters,
+                            child: const Text('Limpiar'),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _applyFiltersFromSheet,
+                            child: const Text('Aplicar Filtros'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
 
-// SOLUCIÓN: Convertimos el Drawer a StatefulWidget para que sea dinámico.
+// SOLUCIÓN: Se reincorpora el widget del menú lateral (Drawer) que fue eliminado por error.
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
 
@@ -199,14 +444,13 @@ class _AppDrawerState extends State<AppDrawer> {
               Navigator.pushNamed(context, '/carrito');
             },
           ),
-          // SOLUCIÓN: Opción "Mis Publicaciones" solo para vendedores.
+          // Opción "Mis Publicaciones" solo para vendedores.
           if (_esVendedor)
             ListTile(
               leading: const Icon(Icons.store_mall_directory_outlined),
               title: const Text('Mis Publicaciones'),
               onTap: () {
                 Navigator.pop(context);
-                // Usamos la nueva ruta que crearemos en main.dart
                 Navigator.pushNamed(context, '/mis-publicaciones');
               },
             ),
@@ -223,9 +467,8 @@ class _AppDrawerState extends State<AppDrawer> {
 
   // Función para manejar el logout desde el Drawer.
   void _logout(BuildContext context) async {
-    final authService = AuthService();
     try {
-      await authService.logout();
+      await _authService.logout();
       if (context.mounted) {
         Navigator.of(
           context,

@@ -127,21 +127,58 @@ class _CarritoScreenState extends State<CarritoScreen> {
                         fit: BoxFit.cover,
                       ),
                       title: Text(item.nombreParte),
-                      // MEJORA: Mostrar la cantidad y el precio unitario para mayor claridad.
+                      // MEJORA: Mostrar el precio unitario y el subtotal del item.
                       subtitle: Text(
-                        'Cantidad: ${item.cantidadEnCarrito} x S/ ${item.precio.toStringAsFixed(2)}',
+                        'S/ ${item.precio.toStringAsFixed(2)} c/u  (Total: S/ ${(item.precio * item.cantidadEnCarrito).toStringAsFixed(2)})',
+                        style: TextStyle(color: Colors.grey.shade600),
                       ),
-                      trailing: IconButton(
-                        icon: const Icon(
-                          Icons.remove_shopping_cart,
-                          color: Colors.red,
-                        ),
-                        onPressed: () async {
-                          await _carritoService.eliminarDelCarrito(
-                            item.publicacionId,
-                          );
-                          _loadCarrito(); // Recargamos la lista
-                        },
+                      // CAMBIO: Se reemplaza el botón de eliminar por un selector de cantidad.
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Botón para disminuir cantidad
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline),
+                            onPressed: () async {
+                              await _carritoService.decrementarCantidad(
+                                item.publicacionId,
+                              );
+                              _loadCarrito(); // Recarga para actualizar la UI
+                            },
+                          ),
+                          // Muestra la cantidad actual
+                          Text(
+                            item.cantidadEnCarrito.toString(),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          // Botón para aumentar cantidad
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline),
+                            color: Colors.teal,
+                            onPressed: () async {
+                              // Validamos contra el stock disponible
+                              if (item.cantidadEnCarrito < item.stock) {
+                                await _carritoService.incrementarCantidad(
+                                  item.publicacionId,
+                                );
+                                _loadCarrito(); // Recarga para actualizar la UI
+                              } else {
+                                // Mostramos un mensaje si se alcanza el límite de stock
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'No hay más stock disponible.',
+                                    ),
+                                    backgroundColor: Colors.orange,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        ],
                       ),
                     );
                   },

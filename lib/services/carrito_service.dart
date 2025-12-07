@@ -81,4 +81,44 @@ class CarritoService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_key);
   }
+
+  // --- MEJORA: FUNCIONES PARA MANEJAR CANTIDADES ---
+
+  // Incrementa la cantidad de un producto en el carrito.
+  Future<void> incrementarCantidad(String publicacionId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final carritoMap = await obtenerCarrito();
+
+    if (carritoMap.containsKey(publicacionId)) {
+      final item = carritoMap[publicacionId]!;
+      // Se valida que no se pueda añadir más cantidad que el stock disponible.
+      if (item.cantidadEnCarrito < item.stock) {
+        item.cantidadEnCarrito++;
+        final Map<String, dynamic> carritoJson = carritoMap.map(
+          (key, value) => MapEntry(key, value.toJson()),
+        );
+        await prefs.setString(_key, json.encode(carritoJson));
+      }
+    }
+  }
+
+  // Decrementa la cantidad de un producto en el carrito.
+  Future<void> decrementarCantidad(String publicacionId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final carritoMap = await obtenerCarrito();
+
+    if (carritoMap.containsKey(publicacionId)) {
+      final item = carritoMap[publicacionId]!;
+      if (item.cantidadEnCarrito > 1) {
+        item.cantidadEnCarrito--;
+        final Map<String, dynamic> carritoJson = carritoMap.map(
+          (key, value) => MapEntry(key, value.toJson()),
+        );
+        await prefs.setString(_key, json.encode(carritoJson));
+      } else {
+        // Si la cantidad es 1, al decrementar se elimina el producto del carrito.
+        await eliminarDelCarrito(publicacionId);
+      }
+    }
+  }
 }

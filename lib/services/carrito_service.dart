@@ -41,6 +41,31 @@ class CarritoService {
     );
   }
 
+  // Obtiene los productos como una lista, que es más fácil de usar en la UI.
+  Future<List<PublicacionAutoparte>> getCarrito() async {
+    final carritoMap = await obtenerCarrito();
+    return carritoMap.values.toList();
+  }
+
+  // Calcula el subtotal de los items en el carrito.
+  double getSubtotal(List<PublicacionAutoparte> items) {
+    return items.fold(0.0, (sum, item) => sum + item.precio);
+  }
+
+  // Elimina un producto del carrito por su ID.
+  Future<void> eliminarDelCarrito(String publicacionId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final carritoActual = await obtenerCarrito();
+
+    carritoActual.remove(publicacionId);
+
+    final Map<String, dynamic> carritoJson = carritoActual.map(
+      (key, value) => MapEntry(key, value.toJson()),
+    );
+
+    await prefs.setString(_key, json.encode(carritoJson));
+  }
+
   // Limpia todo el carrito.
   Future<void> limpiarCarrito() async {
     final prefs = await SharedPreferences.getInstance();

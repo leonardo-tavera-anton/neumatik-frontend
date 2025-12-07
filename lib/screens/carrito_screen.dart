@@ -1,9 +1,9 @@
+// lib/screens/carrito_screen.dart
 import 'package:flutter/material.dart';
 import '../models/publicacion_autoparte.dart';
-import '../services/carrito_service.dart';
+import '../services/carrito_service.dart'; // La importación ahora funcionará
+import '../services/pago_service.dart'; // Importamos el nuevo servicio
 
-// RUTA ASIGNADA: '/carrito'
-// FUNCIÓN: Muestra los productos añadidos al carrito y el total.
 class CarritoScreen extends StatefulWidget {
   const CarritoScreen({super.key});
 
@@ -13,23 +13,56 @@ class CarritoScreen extends StatefulWidget {
 
 class _CarritoScreenState extends State<CarritoScreen> {
   final CarritoService _carritoService = CarritoService();
-  late Future<Map<String, PublicacionAutoparte>> _carritoFuture;
+  final PagoService _pagoService =
+      PagoService(); // Instanciamos el servicio de pago
+
+  late Future<List<PublicacionAutoparte>> _carritoFuture;
+  bool _isProcessingPayment = false;
 
   @override
   void initState() {
     super.initState();
-    _cargarCarrito();
+    _loadCarrito(); // Carga inicial del carrito
   }
 
-  void _cargarCarrito() {
+  void _loadCarrito() {
     setState(() {
-      _carritoFuture = _carritoService.obtenerCarrito();
+      _carritoFuture = _carritoService.getCarrito();
     });
   }
 
-  void _limpiarCarrito() async {
-    await _carritoService.limpiarCarrito();
-    _cargarCarrito(); // Recarga la pantalla para mostrar el carrito vacío.
+  Future<void> _procesarPago(double total) async {
+    if (total <= 0) return;
+
+    setState(() => _isProcessingPayment = true);
+
+    try {
+      // 1. Llamamos al servicio para procesar el pago
+      final pedidoConfirmado = await _pagoService.procesarPago(total);
+
+      // 2. Limpiamos el carrito localmente
+      await _carritoService.limpiarCarrito();
+
+      if (mounted) {
+        // 3. Navegamos a la pantalla de éxito, pasando el objeto 'pedido'
+        Navigator.of(
+          context,
+        ).pushReplacementNamed('/pago-exitoso', arguments: pedidoConfirmado);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error en el pago: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessingPayment = false);
+      }
+    }
   }
 
   @override
@@ -37,46 +70,30 @@ class _CarritoScreenState extends State<CarritoScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mi Carrito de Compras'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_forever),
-            onPressed: _limpiarCarrito,
-            tooltip: 'Limpiar Carrito',
-          ),
-        ],
+        backgroundColor: Colors.teal,
       ),
-      body: FutureBuilder<Map<String, PublicacionAutoparte>>(
+      body: FutureBuilder<List<PublicacionAutoparte>>(
         future: _carritoFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
+          }
+          if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.shopping_cart_checkout,
-                    size: 80,
-                    color: Colors.grey,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Tu Carrito está Vacío',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                ],
+              child: Text(
+                'Tu carrito está vacío.',
+                style: TextStyle(fontSize: 18),
               ),
             );
           }
 
-          final items = snapshot.data!.values.toList();
-          final double total = items.fold(
-            0.0,
-            (sum, item) => sum + item.precio,
-          );
+          final items = snapshot.data!;
+          final double subtotal = _carritoService.getSubtotal(items);
+          final double total =
+              subtotal; // Aquí podrías añadir costos de envío, etc.
 
           return Column(
             children: [
@@ -93,16 +110,24 @@ class _CarritoScreenState extends State<CarritoScreen> {
                         fit: BoxFit.cover,
                       ),
                       title: Text(item.nombreParte),
-                      subtitle: Text(item.condicion),
-                      trailing: Text(
-                        '\$${item.precio.toStringAsFixed(2)}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      subtitle: Text('S/ ${item.precio.toStringAsFixed(2)}'),
+                      trailing: IconButton(
+                        icon: const Icon(
+                          Icons.remove_shopping_cart,
+                          color: Colors.red,
+                        ),
+                        onPressed: () async {
+                          await _carritoService.eliminarDelCarrito(
+                            item.publicacionId,
+                          );
+                          _loadCarrito(); // Recargamos la lista
+                        },
                       ),
                     );
                   },
                 ),
               ),
-              // Resumen y botón de pago
+              // --- Resumen y Botón de Pago ---
               Container(
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
@@ -110,8 +135,8 @@ class _CarritoScreenState extends State<CarritoScreen> {
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
-                      spreadRadius: 0,
                       blurRadius: 10,
+                      offset: const Offset(0, -5),
                     ),
                   ],
                 ),
@@ -121,31 +146,60 @@ class _CarritoScreenState extends State<CarritoScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Total:', style: TextStyle(fontSize: 20)),
+                        const Text('Subtotal:', style: TextStyle(fontSize: 18)),
                         Text(
-                          '\$${total.toStringAsFixed(2)}',
+                          'S/ ${subtotal.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 18),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Total:',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'S/ ${total.toStringAsFixed(2)}',
                           style: const TextStyle(
-                            fontSize: 22,
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: Colors.teal,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        /* Lógica para proceder al pago */
-                      },
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: (_isProcessingPayment || total == 0)
+                          ? null
+                          : () => _procesarPago(total),
+                      icon: _isProcessingPayment
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.payment),
+                      label: Text(
+                        _isProcessingPayment ? 'Procesando...' : 'Pagar Ahora',
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.teal,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      // SOLUCIÓN: Se añade el 'child' que faltaba para el botón.
-                      child: const Text(
-                        'Proceder al Pago',
-                        style: TextStyle(fontSize: 18),
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        textStyle: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],

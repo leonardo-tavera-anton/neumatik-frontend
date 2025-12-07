@@ -95,13 +95,9 @@ class PublicacionAutoparte {
       'stock': stock,
       'ubicacion_ciudad': ubicacionCiudad,
       'id_vendedor': idVendedor,
-      'vendedor_nombre': vendedorNombreCompleto.split(
-        ' ',
-      )[0], // Asume formato "Nombre Apellido"
+      'vendedor_nombre_completo':
+          vendedorNombreCompleto, // MEJORA: Guardar el nombre completo.
       'descripcion_corta': descripcionCorta,
-      'vendedor_apellido': vendedorNombreCompleto.split(' ').length > 1
-          ? vendedorNombreCompleto.split(' ')[1]
-          : '',
       'foto_principal_url': fotoPrincipalUrl,
       'fecha_publicacion': fechaPublicacion.toIso8601String(),
       'ia_verificado': iaVerificado,

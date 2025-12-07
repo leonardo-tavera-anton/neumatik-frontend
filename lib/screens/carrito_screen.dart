@@ -127,7 +127,10 @@ class _CarritoScreenState extends State<CarritoScreen> {
                         fit: BoxFit.cover,
                       ),
                       title: Text(item.nombreParte),
-                      subtitle: Text('S/ ${item.precio.toStringAsFixed(2)}'),
+                      // MEJORA: Mostrar la cantidad y el precio unitario para mayor claridad.
+                      subtitle: Text(
+                        'Cantidad: ${item.cantidadEnCarrito} x S/ ${item.precio.toStringAsFixed(2)}',
+                      ),
                       trailing: IconButton(
                         icon: const Icon(
                           Icons.remove_shopping_cart,

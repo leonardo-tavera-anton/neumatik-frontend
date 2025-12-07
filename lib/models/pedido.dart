@@ -33,6 +33,8 @@ class Pedido {
       // Intenta parsear la fecha que viene del backend (usualmente en formato ISO 8601)
       final fechaOriginal = DateTime.parse(json['fecha'] as String);
       // Formatea la fecha a un formato más legible para el usuario.
+      // CORRECCIÓN: Se asigna el valor formateado a la variable.
+      formattedDate = DateFormat('dd/MM/yyyy hh:mm a').format(fechaOriginal);
     } catch (e) {
       // Si el parseo falla, asigna un valor por defecto para evitar que la app crashe.
       formattedDate = 'Fecha inválida';

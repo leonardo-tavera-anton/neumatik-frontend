@@ -146,7 +146,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Esta es una simulación. No ingrese datos reales.',
+                'Simulando ando, para ver si funciona :)',
                 style: TextStyle(color: Colors.orange, fontSize: 12),
               ),
               const SizedBox(height: 16),

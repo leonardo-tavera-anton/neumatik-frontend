@@ -1,8 +1,5 @@
 // lib/models/pedido.dart
 import 'package:intl/intl.dart';
-// La importación de publicacion_autoparte no es estrictamente necesaria aquí,
-// pero se deja por si se expande el modelo en el futuro.
-import 'publicacion_autoparte.dart';
 
 class Pedido {
   final String id;
@@ -10,6 +7,8 @@ class Pedido {
   final double total;
   final String usuarioNombre;
   final String usuarioCorreo;
+  final String estado; // CAMBIO: Se añade el estado del pedido.
+  final Map<String, dynamic> direccionEnvio; // MEJORA: Se añade la dirección.
   final List<ItemPedido> items;
 
   Pedido({
@@ -18,6 +17,8 @@ class Pedido {
     required this.total,
     required this.usuarioNombre,
     required this.usuarioCorreo,
+    required this.estado,
+    required this.direccionEnvio,
     required this.items,
   });
 
@@ -50,6 +51,10 @@ class Pedido {
       // CORRECCIÓN: Asignar un valor por defecto si el campo no existe en el JSON.
       usuarioNombre: json['usuario_nombre'] as String? ?? 'N/A',
       usuarioCorreo: json['usuario_correo'] as String? ?? 'N/A',
+      // CAMBIO: Se parsea el estado del pedido, con un fallback a 'Pendiente'.
+      estado: json['estado_orden'] as String? ?? 'Pendiente',
+      // MEJORA: Se parsea la dirección de envío, con un fallback seguro.
+      direccionEnvio: json['direccion_envio'] as Map<String, dynamic>? ?? {},
       items: items,
     );
   }

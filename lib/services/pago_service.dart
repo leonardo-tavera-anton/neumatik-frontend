@@ -57,13 +57,21 @@ class PedidoService {
         final responseData = json.decode(response.body);
         return Pedido.fromJson(responseData['pedido']);
       } else {
-        try {
-          final errorData = json.decode(response.body);
-          throw Exception(errorData['message'] ?? 'Error al crear el pedido.');
-        } catch (e) {
-          throw Exception(
-            'El servidor devolvió una respuesta inesperada (código ${response.statusCode}).',
-          );
+        // --- GESTIÓN DE ERRORES MEJORADA ---
+        // Revisa si la respuesta es JSON antes de intentar decodificarla.
+        final contentType = response.headers['content-type'];
+        if (contentType != null && contentType.contains('application/json')) {
+          try {
+            final errorData = json.decode(response.body);
+            // Lanza el mensaje específico del backend.
+            throw Exception(errorData['message'] ?? response.body);
+          } catch (e) {
+            // Si la decodificación JSON falla, muestra la respuesta cruda.
+            throw Exception('Error al procesar la respuesta del servidor: ${response.body}');
+          }
+        } else {
+          // Si la respuesta no es JSON, muestra el cuerpo crudo (puede ser un error HTML del servidor).
+          throw Exception('Error del servidor (código ${response.statusCode}): ${response.body}');
         }
       }
     } catch (e) {

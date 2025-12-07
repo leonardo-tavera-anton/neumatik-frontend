@@ -5,6 +5,7 @@ import 'screens/crear_publicacion_screen.dart';
 import 'screens/edit_perfil_screen.dart'; // Importamos la pantalla de edición
 import 'screens/detalle_publicacion_screen.dart';
 import 'screens/ia_reconocimiento_screen.dart';
+import 'screens/pago_exitoso_screen.dart';
 import 'screens/mis_publicaciones_screen.dart'; // Importamos la pantalla
 import 'screens/login_screen.dart'; // Importa la pantalla de login
 import 'screens/perfil_screen.dart';
@@ -90,6 +91,8 @@ class MyApp extends StatelessWidget {
             ),
           );
         },
+        // SOLUCIÓN: Se añade la ruta que faltaba para la pantalla de pago exitoso.
+        '/pago-exitoso': (context) => const PagoExitosoScreen(),
       },
     );
   }

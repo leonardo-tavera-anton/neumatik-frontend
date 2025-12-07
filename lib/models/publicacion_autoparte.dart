@@ -56,9 +56,8 @@ class PublicacionAutoparte {
       nombreParte: json['nombre_parte'] as String? ?? 'Sin Nombre',
       categoria: json['nombre_categoria'] as String? ?? 'Sin Categoría',
       numeroOem: json['numero_oem'] as String?,
-      precio: double.parse(
-        json['precio'].toString(),
-      ), //Convierte NUMERIC a String al fin funciona carajo
+      // CORRECCIÓN FINAL: Usar tryParse para un manejo de nulos 100% seguro.
+      precio: double.tryParse(json['precio']?.toString() ?? '0.0') ?? 0.0,
       condicion: json['condicion'] as String? ?? 'No especificada',
       stock: json['stock'] as int,
 

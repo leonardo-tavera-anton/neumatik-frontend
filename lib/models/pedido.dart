@@ -43,7 +43,7 @@ class Pedido {
     return Pedido(
       id: json['id'].toString(),
       fecha: formattedDate,
-      total: double.parse(json['total'].toString()),
+      total: double.tryParse(json['total'].toString()) ?? 0.0,
       usuarioNombre: json['usuario_nombre'],
       usuarioCorreo: json['usuario_correo'],
       items: items,
@@ -66,8 +66,8 @@ class ItemPedido {
   factory ItemPedido.fromJson(Map<String, dynamic> json) {
     return ItemPedido(
       nombre: json['nombre_parte'],
-      cantidad: json['cantidad'],
-      precio: double.parse(json['precio'].toString()),
+      cantidad: int.tryParse(json['cantidad'].toString()) ?? 0,
+      precio: double.tryParse(json['precio'].toString()) ?? 0.0,
     );
   }
 }

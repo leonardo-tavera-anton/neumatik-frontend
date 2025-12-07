@@ -89,7 +89,8 @@ class PublicacionAutoparte {
       'nombre_parte': nombreParte,
       'nombre_categoria': categoria,
       'numero_oem': numeroOem,
-      'precio': precio.toString(),
+      // CORRECCIÓN: Guardar el precio como un número (double), no como un String.
+      'precio': precio,
       'condicion': condicion,
       'stock': stock,
       'ubicacion_ciudad': ubicacionCiudad,

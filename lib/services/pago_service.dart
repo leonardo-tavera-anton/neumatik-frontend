@@ -13,6 +13,8 @@ class PedidoService {
   Future<Pedido> crearPedido({
     required List<PublicacionAutoparte> items,
     required double total,
+    required Map<String, String>
+    direccionEnvio, // MEJORA: Se añade la dirección de envío.
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
@@ -28,8 +30,8 @@ class PedidoService {
     final itemsParaEnviar = items
         .map(
           (item) => {
-            'publicacionId':
-                item.publicacionId, // CORRECCIÓN: El campo es publicacionId
+            // CORRECCIÓN CRÍTICA: El backend espera 'id_publicacion' con guion bajo.
+            'id_publicacion': item.publicacionId,
             'cantidad': item.cantidadEnCarrito,
             'precio': item.precio,
           },
@@ -43,8 +45,12 @@ class PedidoService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        // CORRECCIÓN: Enviar el cuerpo completo que el backend espera.
-        body: jsonEncode({'items': itemsParaEnviar, 'total': total}),
+        // CORRECCIÓN: Se elimina el 'body' duplicado y se envía el cuerpo correcto.
+        body: jsonEncode({
+          'items': itemsParaEnviar,
+          'total': total,
+          'direccion_envio': direccionEnvio,
+        }),
       );
 
       if (response.statusCode == 201) {

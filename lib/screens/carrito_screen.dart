@@ -40,11 +40,21 @@ class _CarritoScreenState extends State<CarritoScreen> {
 
     setState(() => _isProcessingPayment = true);
 
+    // MEJORA: Se crea un mapa para la dirección de envío, como lo requiere el nuevo backend.
+    // En una app real, estos datos vendrían de un formulario.
+    final direccionEjemplo = {
+      "direccion": "Av. Principal 123",
+      "ciudad": "Lima",
+      "codigo_postal": "LIMA01",
+      "pais": "Perú",
+    };
+
     try {
       // 1. Llamamos al servicio para crear el pedido, pasando los items y el total.
       final pedidoConfirmado = await _pedidoService.crearPedido(
         items: items,
         total: total,
+        direccionEnvio: direccionEjemplo, // Se pasa la dirección.
       );
 
       // 2. Limpiamos el carrito localmente

@@ -18,6 +18,9 @@ class PublicacionAutoparte {
   final DateTime fechaPublicacion;
   final bool iaVerificado; // Campo del análisis IA
 
+  // MEJORA: Campo para manejar la cantidad en el carrito.
+  int cantidadEnCarrito;
+
   PublicacionAutoparte({
     required this.publicacionId,
     required this.nombreParte,
@@ -34,6 +37,7 @@ class PublicacionAutoparte {
     this.descripcionCorta,
     required this.fechaPublicacion,
     required this.iaVerificado,
+    this.cantidadEnCarrito = 1, // Por defecto, al añadir al carrito es 1.
   });
 
   factory PublicacionAutoparte.fromJson(Map<String, dynamic> json) {
@@ -73,7 +77,8 @@ class PublicacionAutoparte {
       ), // Convierte TIMESTAMPTZ
       iaVerificado:
           json['ia_verificado'] as bool? ??
-          false, // Maneja el nulo si el LEFT JOIN no encuentra IA
+          false, // Maneja el nulo si el LEFT JOIN no encuentra IA.
+      cantidadEnCarrito: json['cantidadEnCarrito'] as int? ?? 1,
     );
   }
 
@@ -99,6 +104,7 @@ class PublicacionAutoparte {
       'foto_principal_url': fotoPrincipalUrl,
       'fecha_publicacion': fechaPublicacion.toIso8601String(),
       'ia_verificado': iaVerificado,
+      'cantidadEnCarrito': cantidadEnCarrito,
     };
   }
 }

@@ -3,21 +3,38 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/pedido.dart';
+import '../models/publicacion_autoparte.dart';
 
-class PagoService {
+// MEJORA: Renombrar a PedidoService para mayor claridad.
+class PedidoService {
   static const String _baseUrl = 'https://neumatik-backend.up.railway.app';
 
-  Future<Pedido> procesarPago(double total) async {
+  // MEJORA: El método ahora acepta la lista de items del carrito y el total.
+  Future<Pedido> crearPedido({
+    required List<PublicacionAutoparte> items,
+    required double total,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
 
     if (token == null) {
-      throw Exception('Usuario no autenticado para procesar el pago.');
+      throw Exception('Usuario no autenticado para crear el pedido.');
     }
 
-    // Este endpoint debería existir en tu backend.
-    // Debería procesar el carrito, crear un pedido en la DB y enviar el correo.
-    final url = Uri.parse('$_baseUrl/api/pagos/procesar');
+    // CORRECCIÓN: Apuntar al endpoint correcto en el backend.
+    final url = Uri.parse('$_baseUrl/api/pedidos');
+
+    // MEJORA: Construir la lista de items en el formato que el backend espera.
+    final itemsParaEnviar = items
+        .map(
+          (item) => {
+            'publicacionId':
+                item.publicacionId, // CORRECCIÓN: El campo es publicacionId
+            'cantidad': item.cantidadEnCarrito,
+            'precio': item.precio,
+          },
+        )
+        .toList();
 
     try {
       final response = await http.post(
@@ -26,18 +43,17 @@ class PagoService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({'total': total}),
+        // CORRECCIÓN: Enviar el cuerpo completo que el backend espera.
+        body: jsonEncode({'items': itemsParaEnviar, 'total': total}),
       );
 
       if (response.statusCode == 201) {
-        // El backend debería devolver los detalles del pedido creado.
         final responseData = json.decode(response.body);
         return Pedido.fromJson(responseData['pedido']);
       } else {
-        // Manejar errores del backend
         try {
           final errorData = json.decode(response.body);
-          throw Exception(errorData['message'] ?? 'Error al procesar el pago.');
+          throw Exception(errorData['message'] ?? 'Error al crear el pedido.');
         } catch (e) {
           throw Exception(
             'El servidor devolvió una respuesta inesperada (código ${response.statusCode}).',
@@ -45,7 +61,37 @@ class PagoService {
         }
       }
     } catch (e) {
-      throw Exception('Error de conexión al procesar el pago: ${e.toString()}');
+      throw Exception('Error de conexión al crear el pedido: ${e.toString()}');
+    }
+  }
+
+  // MEJORA: Añadir método para obtener el historial de pedidos del usuario.
+  Future<List<Pedido>> getMisPedidos() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+
+    if (token == null) {
+      throw Exception('Usuario no autenticado para ver pedidos.');
+    }
+
+    // El endpoint es el mismo que para crear, pero con el método GET.
+    final url = Uri.parse('$_baseUrl/api/pedidos');
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((json) => Pedido.fromJson(json)).toList();
+    } else {
+      throw Exception(
+        'Fallo al cargar el historial de pedidos: ${response.body}',
+      );
     }
   }
 }

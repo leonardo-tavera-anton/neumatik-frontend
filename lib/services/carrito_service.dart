@@ -9,14 +9,20 @@ class CarritoService {
   // Usamos un Map para evitar duplicados, usando el ID de la publicación como clave.
   Future<void> anadirAlCarrito(PublicacionAutoparte publicacion) async {
     final prefs = await SharedPreferences.getInstance();
-    final carritoActual = await obtenerCarrito();
+    final carritoMap = await obtenerCarrito();
 
-    // La clave es el ID, el valor es el objeto completo de la publicación.
-    // Esto permite actualizar un producto si ya existe o añadirlo si es nuevo.
-    carritoActual[publicacion.publicacionId] = publicacion;
+    // MEJORA: Si el producto ya existe, incrementamos su cantidad. Si no, lo añadimos.
+    if (carritoMap.containsKey(publicacion.publicacionId)) {
+      // El producto ya está en el carrito, solo incrementamos la cantidad.
+      carritoMap[publicacion.publicacionId]!.cantidadEnCarrito++;
+    } else {
+      // Es un producto nuevo, lo añadimos con cantidad 1.
+      publicacion.cantidadEnCarrito = 1;
+      carritoMap[publicacion.publicacionId] = publicacion;
+    }
 
     // Convertimos cada objeto PublicacionAutoparte a un mapa JSON.
-    final Map<String, dynamic> carritoJson = carritoActual.map(
+    final Map<String, dynamic> carritoJson = carritoMap.map(
       (key, value) =>
           MapEntry(key, value.toJson()), // Asume que tienes un método toJson()
     );
@@ -49,7 +55,11 @@ class CarritoService {
 
   // Calcula el subtotal de los items en el carrito.
   double getSubtotal(List<PublicacionAutoparte> items) {
-    return items.fold(0.0, (sum, item) => sum + item.precio);
+    // CORRECCIÓN: El subtotal debe multiplicar el precio por la cantidad de cada item.
+    return items.fold(
+      0.0,
+      (sum, item) => sum + (item.precio * item.cantidadEnCarrito),
+    );
   }
 
   // Elimina un producto del carrito por su ID.

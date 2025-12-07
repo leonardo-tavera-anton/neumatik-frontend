@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../models/publicacion_autoparte.dart';
 import '../services/carrito_service.dart'; // La importación ahora funcionará
-import '../services/pago_service.dart'; // Importamos el nuevo servicio
+import '../services/pago_service.dart'; // CORRECCIÓN: El nombre del archivo y la clase ahora es PedidoService
 
 class CarritoScreen extends StatefulWidget {
   const CarritoScreen({super.key});
@@ -13,8 +13,8 @@ class CarritoScreen extends StatefulWidget {
 
 class _CarritoScreenState extends State<CarritoScreen> {
   final CarritoService _carritoService = CarritoService();
-  final PagoService _pagoService =
-      PagoService(); // Instanciamos el servicio de pago
+  // CORRECCIÓN: Usamos el nuevo nombre del servicio.
+  final PedidoService _pedidoService = PedidoService();
 
   late Future<List<PublicacionAutoparte>> _carritoFuture;
   bool _isProcessingPayment = false;
@@ -31,14 +31,21 @@ class _CarritoScreenState extends State<CarritoScreen> {
     });
   }
 
-  Future<void> _procesarPago(double total) async {
+  // MEJORA: El método ahora recibe la lista de items para enviarla al backend.
+  Future<void> _procesarPago(
+    List<PublicacionAutoparte> items,
+    double total,
+  ) async {
     if (total <= 0) return;
 
     setState(() => _isProcessingPayment = true);
 
     try {
-      // 1. Llamamos al servicio para procesar el pago
-      final pedidoConfirmado = await _pagoService.procesarPago(total);
+      // 1. Llamamos al servicio para crear el pedido, pasando los items y el total.
+      final pedidoConfirmado = await _pedidoService.crearPedido(
+        items: items,
+        total: total,
+      );
 
       // 2. Limpiamos el carrito localmente
       await _carritoService.limpiarCarrito();
@@ -178,7 +185,7 @@ class _CarritoScreenState extends State<CarritoScreen> {
                     ElevatedButton.icon(
                       onPressed: (_isProcessingPayment || total == 0)
                           ? null
-                          : () => _procesarPago(total),
+                          : () => _procesarPago(items, total),
                       icon: _isProcessingPayment
                           ? const SizedBox(
                               width: 20,

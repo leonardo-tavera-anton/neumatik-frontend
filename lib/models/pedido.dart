@@ -22,8 +22,10 @@ class Pedido {
   });
 
   factory Pedido.fromJson(Map<String, dynamic> json) {
-    var itemsList = json['items'] as List;
-    List<ItemPedido> items = itemsList
+    // CORRECCIÓN: Manejo seguro de la lista de items.
+    // Si 'items' no viene en el JSON (como en la respuesta de crear pedido), se crea una lista vacía.
+    final itemsList = json['items'] as List<dynamic>? ?? [];
+    final List<ItemPedido> items = itemsList
         .map((i) => ItemPedido.fromJson(i))
         .toList();
 

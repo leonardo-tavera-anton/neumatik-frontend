@@ -22,9 +22,8 @@ class Pedido {
   });
 
   factory Pedido.fromJson(Map<String, dynamic> json) {
-    // MEJORA: Manejo seguro de la lista de items. Si es nula, se crea una lista vacía.
-    final itemsList = json['items'] as List? ?? [];
-    final List<ItemPedido> items = itemsList
+    var itemsList = json['items'] as List;
+    List<ItemPedido> items = itemsList
         .map((i) => ItemPedido.fromJson(i))
         .toList();
 
@@ -45,12 +44,10 @@ class Pedido {
       id: json['id'].toString(),
       fecha: formattedDate,
       // MEJORA: Usar tryParse para evitar errores si el valor no es un número.
-      total: double.tryParse(json['total'].toString()) ?? 0.0,
-      // MEJORA: Asignar un valor por defecto si el campo no existe en el JSON.
-      usuarioNombre:
-          json['usuario_nombre'] as String? ?? 'Nombre no disponible',
-      usuarioCorreo:
-          json['usuario_correo'] as String? ?? 'Correo no disponible',
+      total: double.tryParse(json['total']?.toString() ?? '0.0') ?? 0.0,
+      // CORRECCIÓN: Asignar un valor por defecto si el campo no existe en el JSON.
+      usuarioNombre: json['usuario_nombre'] as String? ?? 'N/A',
+      usuarioCorreo: json['usuario_correo'] as String? ?? 'N/A',
       items: items,
     );
   }
@@ -73,8 +70,8 @@ class ItemPedido {
       // MEJORA: Asignar un valor por defecto si el campo no existe.
       nombre: json['nombre_parte'] as String? ?? 'Producto sin nombre',
       // MEJORA: Usar tryParse para evitar errores con valores no numéricos.
-      cantidad: int.tryParse(json['cantidad'].toString()) ?? 0,
-      precio: double.tryParse(json['precio'].toString()) ?? 0.0,
+      cantidad: int.tryParse(json['cantidad']?.toString() ?? '0') ?? 0,
+      precio: double.tryParse(json['precio']?.toString() ?? '0.0') ?? 0.0,
     );
   }
 }

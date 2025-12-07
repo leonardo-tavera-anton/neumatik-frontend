@@ -26,9 +26,7 @@ class _CarritoScreenState extends State<CarritoScreen> {
   }
 
   void _loadCarrito() {
-    setState(() {
-      _carritoFuture = _carritoService.getCarrito();
-    });
+    _carritoFuture = _carritoService.getCarrito();
   }
 
   // CAMBIO: Este método ahora navega a la pantalla de checkout.

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/carrito_screen.dart';
 import 'screens/home_screen.dart'; // Importa la pantalla de inicio
+import 'screens/checkout_screen.dart'; // IMPORTAMOS LA NUEVA PANTALLA
 import 'screens/crear_publicacion_screen.dart';
 import 'screens/edit_perfil_screen.dart'; // Importamos la pantalla de edición
 import 'screens/detalle_publicacion_screen.dart';
@@ -93,6 +94,16 @@ class MyApp extends StatelessWidget {
         },
         // SOLUCIÓN: Se añade la ruta que faltaba para la pantalla de pago exitoso.
         '/pago-exitoso': (context) => const PagoExitosoScreen(),
+        // RUTA NUEVA: Para la pantalla de checkout.
+        '/checkout': (context) {
+          final args =
+              ModalRoute.of(context)!.settings.arguments
+                  as Map<String, dynamic>;
+          return CheckoutScreen(
+            items: args['items'] as List<PublicacionAutoparte>,
+            total: args['total'] as double,
+          );
+        },
       },
     );
   }

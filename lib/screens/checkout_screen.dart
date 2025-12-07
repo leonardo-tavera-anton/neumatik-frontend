@@ -113,7 +113,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               TextFormField(
                 controller: _direccionController,
                 decoration: const InputDecoration(
-                  labelText: 'Dirección (Ej: Av. La Marina 123)',
+                  labelText: 'Dirección (Ej: Av. Argentina 123)',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>

@@ -454,7 +454,7 @@ class _AppDrawerState extends State<AppDrawer> {
         });
       }
     } catch (e) {
-      // No hacer nada si falla, el menú se mostrará con menos opciones.
+      //en caso no da osea si falla el menu no saldra sin opciones
     }
   }
 

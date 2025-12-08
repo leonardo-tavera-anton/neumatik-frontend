@@ -7,8 +7,8 @@ class Pedido {
   final double total;
   final String usuarioNombre;
   final String usuarioCorreo;
-  final String estado; // CAMBIO: Se añade el estado del pedido.
-  final Map<String, dynamic> direccionEnvio; // MEJORA: Se añade la dirección.
+  final String estado;
+  final Map<String, dynamic> direccionEnvio;
   final List<ItemPedido> items;
 
   Pedido({
@@ -23,38 +23,42 @@ class Pedido {
   });
 
   factory Pedido.fromJson(Map<String, dynamic> json) {
-    // CORRECCIÓN: Manejo seguro de la lista de items.
-    // Si 'items' no viene en el JSON (como en la respuesta de crear pedido), se crea una lista vacía.
+    //la lista de items y si en el endpoint json no hay items como al crear pedi2 se muestra solo lista vacia
     final itemsList = json['items'] as List<dynamic>? ?? [];
     final List<ItemPedido> items = itemsList
         .map((i) => ItemPedido.fromJson(i))
         .toList();
 
-    // --- MEJORA: Manejo seguro de la fecha ---
+    //modo d manejo seguro para las fechas
     String formattedDate;
     try {
-      // Intenta parsear la fecha que viene del backend (usualmente en formato ISO 8601)
-      final fechaOriginal = DateTime.parse(json['fecha'] as String);
-      // Formatea la fecha a un formato más legible para el usuario.
-      // CORRECCIÓN: Se asigna el valor formateado a la variable.
-      formattedDate = DateFormat('dd/MM/yyyy hh:mm a').format(fechaOriginal);
+      //parseando la fecha que viene del backend en formato ISO 8601 AA/MM/DD HH:MM:SS y asi el resto
+      final fechaOriginal = DateTime.parse(
+        json['fecha'] as String,
+      ); //y esto muestra a un formato mas legible para el usuario.
+      formattedDate = DateFormat(
+        'dd/MM/yyyy hh:mm a',
+      ).format(fechaOriginal); //valor formateado a la variable.
     } catch (e) {
-      // Si el parseo falla, asigna un valor por defecto para evitar que la app crashe.
+      //un trycath para q no crashee el app
       formattedDate = 'Fecha inválida';
     }
 
     return Pedido(
       id: json['id'].toString(),
       fecha: formattedDate,
-      // MEJORA: Usar tryParse para evitar errores si el valor no es un número.
-      total: double.tryParse(json['total']?.toString() ?? '0.0') ?? 0.0,
-      // CORRECCIÓN: Asignar un valor por defecto si el campo no existe en el JSON.
+      total:
+          double.tryParse(json['total']?.toString() ?? '0.0') ??
+          0.0, //tryParse para evitar errores si el valor no es un numero
+      //valores por defecto si el campo no existe en el JSON.
       usuarioNombre: json['usuario_nombre'] as String? ?? 'N/A',
       usuarioCorreo: json['usuario_correo'] as String? ?? 'N/A',
-      // CAMBIO: Se parsea el estado del pedido, con un fallback a 'Pendiente'.
-      estado: json['estado_orden'] as String? ?? 'Pendiente',
-      // MEJORA: Se parsea la dirección de envío, con un fallback seguro.
-      direccionEnvio: json['direccion_envio'] as Map<String, dynamic>? ?? {},
+      estado:
+          json['estado_orden'] as String? ??
+          'Pendiente', //parseando ando el estado del pedido con un fallback a "Pendiente"
+      direccionEnvio:
+          json['direccion_envio'] as Map<String, dynamic>? ??
+          {}, //y tmb fallback si no existe direccion_envio
       items: items,
     );
   }
@@ -74,9 +78,10 @@ class ItemPedido {
 
   factory ItemPedido.fromJson(Map<String, dynamic> json) {
     return ItemPedido(
-      // MEJORA: Asignar un valor por defecto si el campo no existe.
-      nombre: json['nombre_parte'] as String? ?? 'Producto sin nombre',
-      // MEJORA: Usar tryParse para evitar errores con valores no numéricos.
+      nombre:
+          json['nombre_parte'] as String? ??
+          'Producto sin nombre', //valor por defecto si el campo no existe.
+      //tryParse para evitar errores con valores no numericos en cantidad y precio
       cantidad: int.tryParse(json['cantidad']?.toString() ?? '0') ?? 0,
       precio: double.tryParse(json['precio']?.toString() ?? '0.0') ?? 0.0,
     );

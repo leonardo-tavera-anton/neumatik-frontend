@@ -1,24 +1,24 @@
-// Archivo: lib/models/publicacion_autoparte.dart
-//Este modelo está diseñado para mapear exactamente la respuesta JSON que genera el endpoint
+//ib/models/publicacion_autoparte.dart
+//modelo esta diseñado para mapear exactamente la respuesta json que genera el endpoint
 
 class PublicacionAutoparte {
-  final String publicacionId; // UUID de la publicación
-  final String nombreParte; // Nombre del producto (e.j., 'Pastillas de freno')
-  final String categoria; // Nombre de la categoría (e.j., 'Frenos')
-  final String? numeroOem; // Número de parte del fabricante (puede ser nulo)
+  final String publicacionId;
+  final String nombreParte;
+  final String categoria;
+  final String? numeroOem;
   final double precio;
-  final String condicion; // Nuevo, Usado, Reacondicionado
+  final String condicion; //nuevo, usado, reacondicionado
   final int stock;
   final String ubicacionCiudad;
-  final String idVendedor; // CAMBIO: Se añade el ID del vendedor.
+  final String idVendedor;
   final String vendedorNombreCompleto;
 
   final String fotoPrincipalUrl;
-  final String? descripcionCorta; // CAMBIO: Se añade la descripción.
+  final String? descripcionCorta;
   final DateTime fechaPublicacion;
-  final bool iaVerificado; // Campo del análisis IA
+  final bool iaVerificado;
 
-  // MEJORA: Campo para manejar la cantidad en el carrito.
+  //cantidad en el carrito
   int cantidadEnCarrito;
 
   PublicacionAutoparte({
@@ -37,21 +37,18 @@ class PublicacionAutoparte {
     this.descripcionCorta,
     required this.fechaPublicacion,
     required this.iaVerificado,
-    this.cantidadEnCarrito = 1, // Por defecto, al añadir al carrito es 1.
+    this.cantidadEnCarrito = 1, //por defecto
   });
 
   factory PublicacionAutoparte.fromJson(Map<String, dynamic> json) {
-    // Concatenar nombre y apellido del vendedor
-    // SOLUCIÓN: Se añade protección contra nulos. Si el nombre o apellido son nulos, se usa una cadena vacía.
+    //concatenar nombre y apellido del vendedor y proteccion en caso son nulos mostrar vacio aunq no creo q suceda
     final nombreVendedor = json['vendedor_nombre'] ?? '';
     final apellidoVendedor = json['vendedor_apellido'] ?? '';
     final nombreCompleto = '$nombreVendedor $apellidoVendedor'.trim();
 
-    // Manejo de la URL de la foto y conversión de tipos
+    //url de la foto y convertor a tipos
     return PublicacionAutoparte(
-      // SOLUCIÓN: Se añade '?? '' ' para proteger contra valores nulos en campos de texto.
-
-      // Esto evita el error 'Null is not a subtype of type String'.
+      //'?? '' ' para proteger contra valores nulos en campos de texto esto evita el error "null is not a subtype of type string"
       publicacionId: json['publicacion_id'] as String? ?? '',
       nombreParte: json['nombre_parte'] as String? ?? 'Sin Nombre',
       categoria: json['nombre_categoria'] as String? ?? 'Sin Categoría',

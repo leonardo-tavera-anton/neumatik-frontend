@@ -1,12 +1,8 @@
 // lib/models/usuario.dart
 
 class Usuario {
-  // Se cambia a String, siguiendo el modelo proporcionado, pero
-  // se utiliza la lógica robusta para manejar la deserialización.
-  final String id;
+  final String id; //para poder llamar luego cambio d valor
   final String nombre;
-  // CRÍTICO: Se hace REQUIRED aquí para evitar errores 500, ya que PostgreSQL
-  // tiene este campo como NOT NULL.
   final String apellido;
   final String correo;
   final String? telefono;
@@ -14,40 +10,36 @@ class Usuario {
   Usuario({
     required this.id,
     required this.nombre,
-    required this.apellido, // Vuelve a ser requerido
+    required this.apellido,
     required this.correo,
-    this.telefono, // Sigue siendo opcional (acepta NULL en DB)
+    this.telefono, //ahora el db acepta nulos
   });
 
-  String get nombreCompleto =>
-      '$nombre ${apellido ?? ''}'.trim(); //no es codigo muerto
+  String get nombreCompleto => '$nombre ${apellido ?? ''}'
+      .trim(); //no es codigo muerto necesario para evitar errores
 
-  // Factory para crear una instancia de Usuario a partir de un mapa JSON
+  //este factory necesario para crear una instancia del usuario (del mapa json)
   factory Usuario.fromJson(Map<String, dynamic> json) {
-    // Maneja 'id' o 'user_id' y asegura que sea un String,
-    // ya sea que venga como String o int del backend.
+    //manejo seguro d valores en los endpoints en backen, ya sea que venga como string o int del backend.
     final rawId = json['id'] ?? json['user_id'];
     final idString = rawId != null ? rawId.toString() : '';
 
     return Usuario(
       id: idString,
       nombre: json['nombre'] as String,
-      // Al deserializar, asumimos que el backend siempre devuelve un apellido no nulo
-      // debido a la restricción NOT NULL en la base de datos.
       apellido: json['apellido'] as String,
       correo: json['correo'] as String,
-      // Se permite que sea nulo si no viene del JSON o viene como null
-      telefono: json['telefono'] as String?,
+      telefono:
+          json['telefono']
+              as String?, //se permite que sea nulo si no viene del json o viene como null
     );
   }
 
-  // Método para enviar datos al backend (útil en el registro o actualización)
+  //mapa metodo para enviar datos al backend(en registro y actualización)
   Map<String, dynamic> toJson() => {
-    // 'id' no suele enviarse en el registro
     'nombre': nombre,
-    'apellido': apellido, // Aseguramos que el campo se envíe
+    'apellido': apellido,
     'correo': correo,
-    // SIMPLIFICACIÓN: Enviamos el valor directamente. La DB ahora tiene un DEFAULT.
-    'telefono': telefono ?? '',
+    'telefono': telefono ?? '', //la db ahora tiene un "default""
   };
 }

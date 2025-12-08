@@ -53,46 +53,45 @@ class PublicacionAutoparte {
       nombreParte: json['nombre_parte'] as String? ?? 'Sin Nombre',
       categoria: json['nombre_categoria'] as String? ?? 'Sin Categoría',
       numeroOem: json['numero_oem'] as String?,
-      // CORRECCIÓN FINAL: Usar tryParse para un manejo de nulos 100% seguro.
-      precio: double.tryParse(json['precio']?.toString() ?? '0.0') ?? 0.0,
+      precio:
+          double.tryParse(json['precio']?.toString() ?? '0.0') ??
+          0.0, //otro tryparse para manejo de nulos seguroo
       condicion: json['condicion'] as String? ?? 'No especificada',
       stock: json['stock'] as int,
 
-      // CORRECCIÓN: Nos aseguramos de que el ID del vendedor siempre se convierta a String.
-      // Esto soluciona el problema de comparación (int vs String).
+      //id  del vendedor siempre se convierta a string para evitar comparaciones con int
       idVendedor: (json['id_vendedor'] ?? '').toString(),
       ubicacionCiudad: json['ubicacion_ciudad'] as String? ?? 'No especificada',
       vendedorNombreCompleto: nombreCompleto,
-      // Usamos un placeholder si la URL es nula o vacía
-      descripcionCorta: json['descripcion_corta'] as String?,
+      descripcionCorta:
+          json['descripcion_corta'] as String?, //placeholder si no hay url
       fotoPrincipalUrl:
           json['foto_principal_url'] ??
           'https://via.placeholder.com/150?text=Neumatik',
       fechaPublicacion: DateTime.parse(
         json['fecha_publicacion'] as String,
-      ), // Convierte TIMESTAMPTZ
+      ), //TIMESTAMPTZ
       iaVerificado:
           json['ia_verificado'] as bool? ??
-          false, // Maneja el nulo si el LEFT JOIN no encuentra IA.
+          false, //ayuda a los nulo si el LEFT JOIN q llamamos no encuentra IA.
       cantidadEnCarrito: json['cantidadEnCarrito'] as int? ?? 1,
     );
   }
 
-  // CAMBIO: Se añade el método toJson para poder guardar en SharedPreferences.
+  //metodo toJson para poder guardar en "SharedPreferences"
   Map<String, dynamic> toJson() {
     return {
       'publicacion_id': publicacionId,
       'nombre_parte': nombreParte,
       'nombre_categoria': categoria,
       'numero_oem': numeroOem,
-      // CORRECCIÓN: Guardar el precio como un número (double), no como un String.
+      //el precio como un número lo guardamos como double y no como un string.
       'precio': precio,
       'condicion': condicion,
       'stock': stock,
       'ubicacion_ciudad': ubicacionCiudad,
       'id_vendedor': idVendedor,
-      'vendedor_nombre_completo':
-          vendedorNombreCompleto, // MEJORA: Guardar el nombre completo.
+      'vendedor_nombre_completo': vendedorNombreCompleto,
       'descripcion_corta': descripcionCorta,
       'foto_principal_url': fotoPrincipalUrl,
       'fecha_publicacion': fechaPublicacion.toIso8601String(),

@@ -1,7 +1,7 @@
 // lib/services/auth_service.dart
 
 import 'dart:convert';
-import 'dart:io'; // Necesario para SocketException, esencial para manejo de red.
+import 'dart:io'; // esta importacio es necesaria para Socket Exception (para manejo d red)
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,45 +9,44 @@ import '../models/usuario.dart';
 import '../models/usuario_autenticado.dart';
 
 class AuthService {
-  // URL base del backend.
-  static const String _baseUrl = 'https://neumatik-backend.up.railway.app';
+  static const String _baseUrl =
+      'https://neumatik-backend.up.railway.app'; //URL base del backend
   static const String _tokenKey = 'auth_token';
 
-  // Constantes para endpoints (COINCIDEN CON EL BACKEND DE EXPRESS.JS)
+  //los endpoints
   final String _loginEndpoint = '/api/auth/login';
   final String _registerEndpoint = '/api/registro';
   final String _profileEndpoint =
-      '/api/usuario/perfil'; // Nuevo endpoint para el perfil
+      '/api/usuario/perfil'; //endpoint para obtener y actualizar perfil
 
-  // --------------------------------------------------------------------------
-  // LÓGICA DE PERSISTENCIA (SharedPreferences) - Métodos privados
-  // --------------------------------------------------------------------------
+  //PERSISTENCIAS (SharedPreferences) estos metodos privados
+  //logica para guardar, obtener y eliminar el token JWT
 
-  // Guarda el token en el almacenamiento local
+  //guarda el token en el almacenamiento local
   Future<void> _saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, token);
   }
 
-  // Obtiene el token del almacenamiento local
+  //obtiene el token del almacenamiento local
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_tokenKey);
   }
 
-  // Cierra sesión y elimina el token (Método público)
+  //elimina el token del almacenamiento local (logout)
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
   }
 
-  // Verifica si el usuario tiene un token almacenado (Método público)
+  //verifica si el usuario está logueado
   Future<bool> isUserLoggedIn() async {
     final token = await _getToken();
     return token != null;
   }
 
-  // FUNCIÓN AÑADIDA: Obtiene el ID del usuario desde el token.
+  //obtiene el id del usuario actual desde el token JWT
   Future<String?> getCurrentUserId() async {
     final token = await _getToken();
     if (token == null) return null;
@@ -62,10 +61,9 @@ class AuthService {
       return null;
     }
   }
-  // --------------------------------------------------------------------------
-  // LÓGICA DE REGISTRO
-  // --------------------------------------------------------------------------
 
+  //===================
+  //logica de registro
   Future<UsuarioAutenticado> registerUser({
     required String nombre,
     required String apellido,
@@ -79,8 +77,7 @@ class AuthService {
       'nombre': nombre,
       'apellido': apellido,
       'correo': correo,
-      // Se usa 'contrasena' para coincidir con el backend JS
-      'contrasena': contrasena,
+      'contrasena': contrasena, //la contraseña se envía tal cual al backend
       'telefono': telefono,
     });
 
@@ -91,27 +88,25 @@ class AuthService {
         body: body,
       );
 
-      // 1. Manejo de respuesta exitosa (201 Created)
+      // 1. Registro exitoso (201 en el railway se verifica esto debe estar en verde no olvidar)
       if (response.statusCode == 201) {
         final Map<String, dynamic> responseBody = jsonDecode(response.body);
 
-        // Asumiendo que el campo 'token' se encuentra en el nivel superior del body de respuesta.
+        //parsea la respuesta en el modelo UsuarioAutenticado
         final authResult = UsuarioAutenticado.fromJson(responseBody);
 
         await _saveToken(authResult.token);
 
         return authResult;
       } else {
-        // 2. Manejo de códigos de error (4xx, 5xx)
-        // SOLUCIÓN: Validar si la respuesta tiene cuerpo antes de decodificar.
+        // 2. Manejo de errores (400, 409, 500, 505 etc etc)
         if (response.body.isEmpty) {
           throw Exception(
             'Error en el registro. El servidor respondió con un error pero sin detalles (Código: ${response.statusCode})',
           );
         }
 
-        // SOLUCIÓN: Manejar respuestas de error que no son JSON.
-        // Intentamos decodificar, si falla, usamos el cuerpo de la respuesta como texto plano.
+        //trycatch para decodificar y si falla usamos el cuerpo de la respuesta como texto plano.
         try {
           final Map<String, dynamic> errorBody = jsonDecode(response.body);
           final errorMessage =
@@ -121,7 +116,7 @@ class AuthService {
               'Ocurrió un error desconocido.';
           throw Exception(errorMessage);
         } catch (e) {
-          // Si no es JSON, el cuerpo de la respuesta es el error (ej. "Credenciales inválidas").
+          //ya ahora si no es json la info el cuerpo de la respuesta es el error en caso solo para descartar
           throw Exception(response.body);
         }
       }
@@ -136,10 +131,8 @@ class AuthService {
     }
   }
 
-  // --------------------------------------------------------------------------
-  // LÓGICA DE LOGIN
-  // --------------------------------------------------------------------------
-
+  //================
+  //logica de login
   Future<UsuarioAutenticado> loginUser({
     required String correo,
     required String contrasena,
@@ -155,9 +148,7 @@ class AuthService {
       );
 
       if (response.statusCode == 200) {
-        // 200 OK: Inicio de sesión exitoso
-        // SOLUCIÓN: Añadimos un try-catch aquí porque el servidor podría enviar
-        // un 200 OK con un cuerpo que no es JSON, causando el error.
+        // Login exitoso
         try {
           final Map<String, dynamic> responseBody = jsonDecode(response.body);
           final authResult = UsuarioAutenticado.fromJson(responseBody);
@@ -166,22 +157,17 @@ class AuthService {
 
           return authResult;
         } catch (e) {
-          // Si el servidor envía 200 OK pero el cuerpo no es JSON, lo capturamos.
           throw Exception(
             'El servidor dio una respuesta inesperada. Cuerpo: ${response.body}',
           );
         }
       } else {
-        // Manejo de errores (401, 400, etc.)
-        // SOLUCIÓN: Validar si la respuesta tiene cuerpo antes de decodificar.
         if (response.body.isEmpty) {
           throw Exception(
             'Credenciales inválidas o error del servidor (Código: ${response.statusCode})',
           );
         }
 
-        // SOLUCIÓN: Manejar respuestas de error que no son JSON.
-        // Intentamos decodificar, si falla, usamos el cuerpo de la respuesta como texto plano.
         try {
           final Map<String, dynamic> errorBody = jsonDecode(response.body);
           final errorMessage =
@@ -190,7 +176,6 @@ class AuthService {
               'Credenciales inválidas o error desconocido.';
           throw Exception(errorMessage);
         } catch (e) {
-          // Si no es JSON, el cuerpo de la respuesta es el error (ej. "Credenciales inválidas").
           throw Exception(response.body);
         }
       }
@@ -203,18 +188,14 @@ class AuthService {
         'Respuesta inesperada del servidor (formato JSON inválido).',
       );
     } catch (e) {
-      // Limpiamos el mensaje de error para que sea más legible.
+      //otros errores
       throw Exception(
         'Error al iniciar sesión: ${e.toString().replaceFirst("Exception: ", "")}',
       );
     }
   }
 
-  // --------------------------------------------------------------------------
-  // LÓGICA DE PERFIL DE USUARIO
-  // --------------------------------------------------------------------------
-
-  // Obtiene el perfil completo del usuario autenticado (requiere JWT)
+  //logica para obtener el perfil de usuario
   Future<Map<String, dynamic>> fetchUserProfile() async {
     final token = await _getToken();
     if (token == null) {
@@ -228,20 +209,15 @@ class AuthService {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token', // Enviar el token en el header
+          'Authorization': 'Bearer $token', //envia el token en el header
         },
       );
 
       if (response.statusCode == 200) {
-        // Respuesta exitosa
         final Map<String, dynamic> responseBody = jsonDecode(response.body);
 
-        // El backend devuelve { perfil: {...}, mensaje: ... }
         if (responseBody.containsKey('perfil')) {
-          // SOLUCIÓN DE CONSISTENCIA:
-          // Para unificar, devolvemos un mapa que usa la clave 'user',
-          // igual que en el login/registro. Así, el resto de la app
-          // siempre espera un 'user'.
+          //verifica que la clave exista
           return {'user': responseBody['perfil']};
         } else {
           throw Exception(
@@ -249,13 +225,13 @@ class AuthService {
           );
         }
       } else if (response.statusCode == 401 || response.statusCode == 403) {
-        // Token inválido o expirado -> Forzar cierre de sesión y notificar
+        //token invalido o expirado
         await logout();
         throw Exception(
           'Sesión expirada o token inválido. Vuelva a iniciar sesión.',
         );
       } else {
-        // Otro error del servidor (ej. 500)
+        //otros errores del servidor (ej. 500)
         String errorDetail = response.body.isNotEmpty
             ? jsonDecode(response.body)['error'] ??
                   'Error desconocido del servidor.'
@@ -274,9 +250,7 @@ class AuthService {
     }
   }
 
-  // ==========================================================================
-  // LÓGICA PARA ACTUALIZAR PERFIL DE USUARIO
-  // ==========================================================================
+  //logica para actualizar el perfil de usuario
   Future<Map<String, dynamic>> updateUserProfile({
     required String nombre,
     required String apellido,
@@ -286,9 +260,7 @@ class AuthService {
     if (token == null) {
       throw Exception('Usuario no autenticado para actualizar.');
     }
-
-    // SOLUCIÓN: Asegurarse de que se usa el endpoint correcto para la petición PUT.
-    // La variable _profileEndpoint ya apunta a '/api/usuario/perfil'.
+    //endpoint
     final url = Uri.parse('$_baseUrl$_profileEndpoint');
 
     final body = jsonEncode({
@@ -309,7 +281,7 @@ class AuthService {
 
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
-        // El backend devuelve { perfil: {...} }, lo envolvemos en { user: {...} } para consistencia.
+        //retorna el perfil actualizado
         return {'user': responseBody['perfil']};
       } else {
         throw Exception('Fallo al actualizar el perfil: ${response.body}');

@@ -4,6 +4,7 @@ import '../models/publicacion_autoparte.dart';
 import '../services/pago_service.dart';
 import '../services/carrito_service.dart';
 
+//checkout pago
 class CheckoutScreen extends StatefulWidget {
   final List<PublicacionAutoparte> items;
   final double total;
@@ -20,7 +21,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final CarritoService _carritoService = CarritoService();
   bool _isProcessingPayment = false;
 
-  // Controladores para los campos del formulario
+  //creacion d controladores para los campos del formulario
   final _direccionController = TextEditingController();
   final _ciudadController = TextEditingController();
   final _referenciaController = TextEditingController();
@@ -40,14 +41,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _finalizarCompra() async {
-    // Validamos que el formulario esté correcto
     if (!_formKey.currentState!.validate()) {
+      //validacion si son correctos
       return;
     }
 
     setState(() => _isProcessingPayment = true);
 
-    // Creamos el objeto de dirección para enviar al backend
+    //creamos el objeto direccionEnvio para enviar al backend
     final direccionEnvio = {
       "direccion": _direccionController.text,
       "ciudad": _ciudadController.text,
@@ -56,18 +57,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     };
 
     try {
-      // 1. Llamamos al servicio para crear el pedido
+      //en este trycatch primero llamamos al servicio para crear el pedido
       final pedidoConfirmado = await _pedidoService.crearPedido(
         items: widget.items,
         total: widget.total,
         direccionEnvio: direccionEnvio,
       );
 
-      // 2. Limpiamos el carrito localmente
+      //se limpia el carrito localmente
       await _carritoService.limpiarCarrito();
 
       if (mounted) {
-        // 3. Navegamos a la pantalla de éxito
+        //y redigirimos al pago exitoso
         Navigator.of(context).pushNamedAndRemoveUntil(
           '/pago-exitoso',
           (route) => false,
@@ -104,7 +105,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- Sección de Dirección de Envío ---
+              //parte d direcciion envio
               const Text(
                 'Dirección de Envío',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -139,7 +140,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
               const Divider(height: 40),
 
-              // --- Sección de Pago ---
+              //metodo d pago
               const Text(
                 'Información de Pago',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -191,7 +192,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
               const SizedBox(height: 30),
 
-              // --- Botón de Pagar ---
+              //boton d pagar
               ElevatedButton.icon(
                 onPressed: _isProcessingPayment ? null : _finalizarCompra,
                 icon: _isProcessingPayment

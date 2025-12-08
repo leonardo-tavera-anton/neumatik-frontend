@@ -1,26 +1,26 @@
 import 'package:flutter/material.dart';
 import 'screens/carrito_screen.dart';
-import 'screens/home_screen.dart'; // Importa la pantalla de inicio
-import 'screens/checkout_screen.dart'; // IMPORTAMOS LA NUEVA PANTALLA
+import 'screens/home_screen.dart';
+import 'screens/checkout_screen.dart';
 import 'screens/crear_publicacion_screen.dart';
-import 'screens/edit_perfil_screen.dart'; // Importamos la pantalla de edición
+import 'screens/edit_perfil_screen.dart';
 import 'screens/detalle_publicacion_screen.dart';
 import 'screens/ia_reconocimiento_screen.dart';
 import 'screens/pago_exitoso_screen.dart';
-import 'screens/mis_publicaciones_screen.dart'; // Importamos la pantalla
-import 'screens/login_screen.dart'; // Importa la pantalla de login
+import 'screens/mis_publicaciones_screen.dart';
+import 'screens/login_screen.dart';
 import 'screens/perfil_screen.dart';
-import 'screens/registro_screen.dart'; // Importa la pantalla de registro
-import 'services/auth_service.dart'; // Importa el servicio de autenticación
+import 'screens/registro_screen.dart';
+import 'services/auth_service.dart';
 import 'screens/edit_publicacion_screen.dart';
 import 'models/publicacion_autoparte.dart';
 
-// 1. GlobalKey para el Navigator
-// Esto permite la navegación desde fuera del árbol de widgets, una práctica robusta.
+//global navigator key
+//esta clave nos permite navegar sin necesidad de un context
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
-  // Asegura que los servicios de Flutter (como SharedPreferences) estén inicializados
+  //asegura que los bindings de flutter esten inicializados
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
@@ -31,12 +31,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // 2. Asignamos el GlobalKey al navigatorKey
+      //asigna la clave global al navigator
       navigatorKey: navigatorKey,
       title: 'Neumatik App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // Tema principal de la aplicación
+        //tema principal de la app color celeste turquesa medio raro
         primarySwatch: Colors.teal,
         visualDensity: VisualDensity.adaptivePlatformDensity,
         fontFamily: 'Roboto',
@@ -45,17 +45,16 @@ class MyApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      // La ruta inicial es nuestra pantalla de verificación de estado
+      //la ruta inicial es la pantalla que verifica el estado de autenticacion
       initialRoute: '/',
       routes: {
-        // La ruta inicial que verifica el estado de autenticación
+        //la ruta raiz verifica si el usuario esta logueado
         '/': (context) => const CheckAuthStateScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegistroScreen(),
         '/home': (context) => const HomeScreen(),
-        // 3. RUTAS AÑADIDAS: Se agregan las rutas que faltaban.
-        '/perfil': (context) =>
-            const PerfilScreen(), // Pantalla de perfil de usuario.
+        //se agrega la ruta para la pantalla de perfil
+        '/perfil': (context) => const PerfilScreen(), //ruta: /perfil
         '/ia-reconocimiento': (context) => const IAReconocimientoScreen(),
         '/carrito': (context) => const CarritoScreen(),
         '/edit-perfil': (context) {
@@ -64,9 +63,9 @@ class MyApp extends StatelessWidget {
                   as Map<String, dynamic>;
           return EditPerfilScreen(perfil: perfilActual);
         },
-        // Ruta para la pantalla de mis publicaciones
+        //ruta para mis publicaciones
         '/mis-publicaciones': (context) => const MisPublicacionesScreen(),
-        // Ruta para la pantalla de edición de publicaciones
+        //ruta para editar una publicacion
         '/edit-publicacion': (context) {
           final publicacion =
               ModalRoute.of(context)!.settings.arguments
@@ -74,27 +73,25 @@ class MyApp extends StatelessWidget {
           return EditPublicacionScreen(publicacion: publicacion);
         },
         '/crear-publicacion': (context) => const CrearPublicacionScreen(),
-        // 4. RUTA DE DETALLE: Ruta para mostrar el detalle de una publicación.
-        // Extrae el ID de los argumentos de la ruta.
+        //ruta para el detalle de una publicacion
         '/publicacion': (context) {
           final arguments = ModalRoute.of(context)!.settings.arguments;
-          // verificación para evitar errores durante el hot restart
-          // si los argumentos se pierden.
+          //verificación para evitar errores durante el hot restart con R*
+          //si los argumentos se pierden.
           if (arguments is String) {
             return DetallePublicacionScreen(publicacionId: arguments);
           }
-          // Si los argumentos no son válidos, muestra una pantalla de error segura.
+          //si no son validos los argumentos mostramos un error
           return Scaffold(
-            // CORRECCIÓN: Se elimina 'const' porque AppBar no es constante.
             appBar: AppBar(title: const Text('Error')),
             body: const Center(
               child: Text('ID de publicación no válido o no encontrado.'),
             ),
           );
         },
-        // SOLUCIÓN: Se añade la ruta que faltaba para la pantalla de pago exitoso.
+        //ruta para la pantalla de pago exitoso
         '/pago-exitoso': (context) => const PagoExitosoScreen(),
-        // RUTA NUEVA: Para la pantalla de checkout.
+        //ruta para la pantalla de checkout
         '/checkout': (context) {
           final args =
               ModalRoute.of(context)!.settings.arguments
@@ -109,8 +106,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// Pantalla intermedia para verificar si el usuario ya está logueado al iniciar la app
-// SOLUCIÓN: Convertido a StatefulWidget para manejar la lógica de navegación de forma segura en initState.
+//pantalla que verifica el estado de autenticacion y redirige a la pantalla adecuada
 class CheckAuthStateScreen extends StatefulWidget {
   const CheckAuthStateScreen({super.key});
 
@@ -121,17 +117,16 @@ class CheckAuthStateScreen extends StatefulWidget {
 class _CheckAuthStateScreenState extends State<CheckAuthStateScreen> {
   @override
   void initState() {
-    super.initState();
-    // Se llama a la verificación aquí para que se ejecute solo una vez.
+    super.initState(); //al iniciar el estado
     _checkAuthAndNavigate();
   }
 
-  // Determina la ruta inicial consultando el servicio de autenticación
+  //dispositivo asincrono para verificar autenticacion y navegar
   Future<void> _checkAuthAndNavigate() async {
     final authService = AuthService();
     final isLoggedIn = await authService.isUserLoggedIn();
     final route = isLoggedIn ? '/home' : '/login';
-    // Usamos el context del State, asegurándonos de que el widget esté montado.
+    //navega a la ruta correspondiente
     if (mounted) {
       Navigator.of(context).pushReplacementNamed(route);
     }
@@ -139,7 +134,7 @@ class _CheckAuthStateScreenState extends State<CheckAuthStateScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Muestra un indicador de carga mientras se realiza la verificación en initState.
+    //muestra un indicador de carga mientras verifica
     return const Scaffold(
       body: Center(child: CircularProgressIndicator(color: Colors.teal)),
     );

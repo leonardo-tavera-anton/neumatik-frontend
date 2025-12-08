@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-// Importamos el modelo UsuarioAutenticado para el tipado, ya que el servicio lo devuelve.
-import '../models/usuario_autenticado.dart'; 
+import '../models/usuario_autenticado.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -36,39 +35,34 @@ class _LoginScreenState extends State<LoginScreen> {
       final String contrasena = _contrasenaController.text;
 
       try {
-        // Tipamos explícitamente el resultado para asegurar el uso del modelo UsuarioAutenticado.
-        final UsuarioAutenticado usuarioAutenticado = await _authService.loginUser(
-          correo: correo, 
-          contrasena: contrasena,
-        );
+        final UsuarioAutenticado usuarioAutenticado = await _authService
+            .loginUser(correo: correo, contrasena: contrasena);
 
         if (mounted) {
-          // FIX: Accedemos a la propiedad 'nombre' a través del objeto anidado 'user'
-          // Utilizamos nombreCompleto que ya está definido en el modelo Usuario.
-          final userName = usuarioAutenticado.user.nombreCompleto; 
+          final userName = usuarioAutenticado.user.nombreCompleto;
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '🎉 Sesión iniciada con éxito. Bienvenido, $userName!',
+                '🔑 Sesión iniciada con éxito. Bienvenido, $userName!', //mensajito
               ),
               backgroundColor: Colors.teal,
             ),
           );
 
-          // Redirigir al Home y eliminar el Login de la pila de navegación
-          // Se asume que '/home' es la ruta principal.
+          //redirige al home
           Navigator.of(
             context,
           ).pushNamedAndRemoveUntil('/home', (route) => false);
         }
       } catch (e) {
         if (mounted) {
-          // Captura errores lanzados por el AuthService (ej. Credenciales inválidas o conexión)
           final errorMessage = e.toString().replaceFirst('Exception: ', '');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('❌ Error al iniciar sesión: $errorMessage'),
+              content: Text(
+                '❌ Error al iniciar sesión: $errorMessage',
+              ), //en caso sea invalido el try catch manda este mensajito
               backgroundColor: Colors.red,
             ),
           );
@@ -83,16 +77,15 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // Navega a la pantalla de registro
+  //para ir a la pantalla de registro
   void _navigateToRegister() {
-    // Se asume que '/register' es la ruta de registro.
-    Navigator.of(context).pushNamed('/register');
+    Navigator.of(context).pushNamed('/register'); //direccion
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Añadimos un AppBar para consistencia de diseño
+      //appbar basico
       appBar: AppBar(
         title: const Text(
           'Iniciar Sesión',
@@ -123,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  // Título/Logo
+                  //titulo d inicio
                   const Text(
                     'Bienvenido a Neumatik',
                     style: TextStyle(
@@ -141,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 40),
 
-                  // Campo Correo
+                  //campo correo
                   TextFormField(
                     controller: _correoController,
                     keyboardType: TextInputType.emailAddress,
@@ -167,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Campo Contraseña
+                  //campo contraseña
                   TextFormField(
                     controller: _contrasenaController,
                     obscureText: true,
@@ -189,7 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 30),
 
-                  // Botón de Inicio de Sesión
+                  //boton inicio d sesion
                   ElevatedButton(
                     onPressed: _isLoading ? null : _handleLogin,
                     style: ElevatedButton.styleFrom(
@@ -220,7 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 15),
 
-                  // Enlace a Registro
+                  //y enlace a registro
                   TextButton(
                     onPressed: _navigateToRegister,
                     child: const Text(

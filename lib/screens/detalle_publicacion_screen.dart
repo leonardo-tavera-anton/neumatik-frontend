@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import '../models/publicacion_autoparte.dart';
 import '../services/carrito_service.dart';
 import '../services/publicacion_service.dart';
-import '../services/auth_service.dart'; // Importamos para saber quién es el usuario.
+import '../services/auth_service.dart';
 
-// RUTA ASIGNADA: '/publicacion' (Ruta dinámica)
-// FUNCIÓN: Muestra la información detallada de una publicación específica.
+//ruta: "/publicacion"
 class DetallePublicacionScreen extends StatefulWidget {
-  // Recibe el ID de la publicación desde los argumentos de la ruta.
   final String publicacionId;
 
   const DetallePublicacionScreen({super.key, required this.publicacionId});
@@ -19,10 +17,8 @@ class DetallePublicacionScreen extends StatefulWidget {
 
 class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
   final PublicacionService _publicacionService = PublicacionService();
-  final CarritoService _carritoService =
-      CarritoService(); // CAMBIO: Se añade el servicio de carrito.
-  final AuthService _authService =
-      AuthService(); // SOLUCIÓN: Para verificar el dueño.
+  final CarritoService _carritoService = CarritoService();
+  final AuthService _authService = AuthService(); //verificar el dueño
 
   late Future<PublicacionAutoparte> _publicacionFuture;
   @override
@@ -31,34 +27,30 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
     _cargarDatosYVerificarPropietario();
   }
 
-  // SOLUCIÓN: Nueva función para cargar todo y verificar si el usuario es el dueño.
-  bool _esPropietario = false; // Estado para saber si el usuario es el dueño.
+  bool _esPropietario = false; //estado para saber si el usuario es el dueño.
   Future<void> _cargarDatosYVerificarPropietario() async {
-    // Iniciamos la carga de la publicación.
     final future = _publicacionService.getPublicacionById(widget.publicacionId);
     setState(() {
       _publicacionFuture = future;
     });
 
     try {
-      // Obtenemos el ID del usuario actual y los datos de la publicación.
       final currentUserId = await _authService.getCurrentUserId();
       final publicacion = await future;
 
       if (mounted &&
           currentUserId != null &&
           currentUserId.toString() == publicacion.idVendedor) {
-        // CORRECCIÓN: Comparamos ambos IDs como Strings.
+        //Comparacion d ambos ids como strings.
         setState(() {
           _esPropietario = true;
         });
       }
     } catch (e) {
-      // Manejar error si es necesario, aunque el FutureBuilder ya lo hace.
+      //otro manejo d error aunque el futurebuilder ya lo hace.
     }
   }
 
-  // SOLUCIÓN: Se añade la función que faltaba para manejar la acción de añadir al carrito.
   void _anadirAlCarrito(PublicacionAutoparte publicacion) async {
     try {
       await _carritoService.anadirAlCarrito(publicacion);
@@ -83,7 +75,7 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // CORRECCIÓN: El FutureBuilder ahora envuelve todo el Scaffold.
+    //futurebuilder ahora envuelve todo el scaffold
     return FutureBuilder<PublicacionAutoparte>(
       future: _publicacionFuture,
       builder: (context, snapshot) {
@@ -109,10 +101,10 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
           );
         }
 
-        // Si todo sale bien, tenemos los datos de la publicación.
+        //se deberia tener los datos de la publicación.
         final publicacion = snapshot.data!;
 
-        // Construimos el Scaffold completo ahora que tenemos los datos.
+        //el Scaffold es para tener los datos.
         return Scaffold(
           appBar: AppBar(
             title: const Text('Detalle de Autoparte'),
@@ -122,7 +114,6 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
                   icon: const Icon(Icons.edit_note),
                   tooltip: 'Editar Publicación',
                   onPressed: () {
-                    // CORRECCIÓN: Ahora 'snapshot' sí está definido en este contexto.
                     Navigator.pushNamed(
                       context,
                       '/edit-publicacion',
@@ -136,7 +127,7 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Imagen principal
+                //imagen principal
                 Image.network(
                   publicacion.fotoPrincipalUrl,
                   height: 300,
@@ -152,13 +143,12 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
                     ),
                   ),
                 ),
-                // Resto del contenido de la pantalla...
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Nombre y Verificación IA
+                      //nombre y verificacion d IA
                       Row(
                         children: [
                           Expanded(
@@ -177,9 +167,8 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
                             ),
                         ],
                       ),
-                      // ... (el resto del código sigue igual)
+                      //eel resto del código sigue igual
                       const SizedBox(height: 8),
-                      // Precio
                       Text(
                         'S/ ${publicacion.precio.toStringAsFixed(2)}',
                         style: TextStyle(
@@ -189,7 +178,7 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      // Condición y Stock
+
                       Row(
                         children: [
                           Chip(
@@ -202,7 +191,6 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
                       ),
                       const Divider(height: 32),
 
-                      // CAMBIO: Sección de Descripción
                       if (publicacion.descripcionCorta != null &&
                           publicacion.descripcionCorta!.isNotEmpty) ...[
                         const Text(
@@ -217,7 +205,6 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
                         const Divider(height: 32),
                       ],
 
-                      // SOLUCIÓN: Se añade la categoría de la publicación.
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         leading: const Icon(
@@ -228,7 +215,6 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
                         subtitle: Text(publicacion.categoria),
                       ),
 
-                      // Vendedor y Ubicación
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         leading: const Icon(
@@ -248,8 +234,7 @@ class _DetallePublicacionScreenState extends State<DetallePublicacionScreen> {
                         subtitle: Text(publicacion.ubicacionCiudad),
                       ),
                       const SizedBox(height: 24),
-                      // Botón de Añadir al Carrito
-                      // SIMPLIFICACIÓN: El botón se muestra si el usuario NO es el propietario.
+                      //boton para añadir al carrito solo si el usuario NOOOO es el propietario.
                       if (!_esPropietario)
                         ElevatedButton.icon(
                           onPressed: () => _anadirAlCarrito(publicacion),

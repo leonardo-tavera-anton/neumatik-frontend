@@ -3,21 +3,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:neumatik_frontend/main.dart';
 
 void main() {
-  // Test para verificar que la app inicia y navega a la pantalla de Login.
+  //test para verificar la navegacion inicial segun el estado de autenticacion
   testWidgets('La app inicia y muestra la pantalla de Login si no hay sesión', (
     WidgetTester tester,
   ) async {
-    // 1. Construir nuestra aplicación.
+    // 1. Construir nuestra aplicacion
     await tester.pumpWidget(const MyApp());
 
     // 2. La app primero muestra un CircularProgressIndicator en CheckAuthStateScreen.
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-    // 3. Esperamos a que todos los frames y la navegación se completen.
-    // Esto simula la finalización del FutureBuilder y la redirección.
+    // 3. Esperamos a que la navegación se complete
     await tester.pumpAndSettle();
 
-    // 4. Verificar que, al no haber sesión, se muestra la pantalla de Login.
+    // 4. Verificamos que la pantalla de Login se muestra
     expect(find.text('Iniciar Sesión'), findsOneWidget);
   });
 }

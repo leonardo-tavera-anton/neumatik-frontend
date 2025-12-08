@@ -5,32 +5,30 @@ import '../models/publicacion_autoparte.dart';
 class CarritoService {
   static const _key = 'carrito';
 
-  // Añade un producto al carrito.
-  // Usamos un Map para evitar duplicados, usando el ID de la publicación como clave.
+  //añade un producto al carrito
   Future<void> anadirAlCarrito(PublicacionAutoparte publicacion) async {
     final prefs = await SharedPreferences.getInstance();
     final carritoMap = await obtenerCarrito();
 
-    // MEJORA: Si el producto ya existe, incrementamos su cantidad. Si no, lo añadimos.
+    //verificamos si el producto ya está en el carrito
     if (carritoMap.containsKey(publicacion.publicacionId)) {
-      // El producto ya está en el carrito, solo incrementamos la cantidad.
+      //si ya existe incrementamos la cantidad
       carritoMap[publicacion.publicacionId]!.cantidadEnCarrito++;
     } else {
-      // Es un producto nuevo, lo añadimos con cantidad 1.
+      //en caso contrario lo añadimos con cantidad 1
       publicacion.cantidadEnCarrito = 1;
       carritoMap[publicacion.publicacionId] = publicacion;
     }
 
-    // Convertimos cada objeto PublicacionAutoparte a un mapa JSON.
+    //guardamos el carrito actualizado
     final Map<String, dynamic> carritoJson = carritoMap.map(
-      (key, value) =>
-          MapEntry(key, value.toJson()), // Asume que tienes un método toJson()
+      (key, value) => MapEntry(key, value.toJson()),
     );
 
     await prefs.setString(_key, json.encode(carritoJson));
   }
 
-  // Obtiene todos los productos del carrito.
+  //obtiene el carrito completo como un mapa
   Future<Map<String, PublicacionAutoparte>> obtenerCarrito() async {
     final prefs = await SharedPreferences.getInstance();
     final carritoString = prefs.getString(_key);
@@ -41,28 +39,27 @@ class CarritoService {
 
     final Map<String, dynamic> carritoJson = json.decode(carritoString);
 
-    // Convertimos de vuelta de JSON a objetos PublicacionAutoparte.
+    //convertimos el mapa json a un mapa de PublicacionAutoparte
     return carritoJson.map(
       (key, value) => MapEntry(key, PublicacionAutoparte.fromJson(value)),
     );
   }
 
-  // Obtiene los productos como una lista, que es más fácil de usar en la UI.
+  //obtiene la lista de productos en el carrito
   Future<List<PublicacionAutoparte>> getCarrito() async {
     final carritoMap = await obtenerCarrito();
     return carritoMap.values.toList();
   }
 
-  // Calcula el subtotal de los items en el carrito.
+  //calcula el subtotal del carrito
   double getSubtotal(List<PublicacionAutoparte> items) {
-    // CORRECCIÓN: El subtotal debe multiplicar el precio por la cantidad de cada item.
     return items.fold(
       0.0,
       (sum, item) => sum + (item.precio * item.cantidadEnCarrito),
     );
   }
 
-  // Elimina un producto del carrito por su ID.
+  //elimina un producto del carrito por su id
   Future<void> eliminarDelCarrito(String publicacionId) async {
     final prefs = await SharedPreferences.getInstance();
     final carritoActual = await obtenerCarrito();
@@ -76,22 +73,20 @@ class CarritoService {
     await prefs.setString(_key, json.encode(carritoJson));
   }
 
-  // Limpia todo el carrito.
+  //limpia todo el carrito
   Future<void> limpiarCarrito() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_key);
   }
 
-  // --- MEJORA: FUNCIONES PARA MANEJAR CANTIDADES ---
-
-  // Incrementa la cantidad de un producto en el carrito.
+  //incrementa la cantidad de un producto en el carrito
   Future<void> incrementarCantidad(String publicacionId) async {
     final prefs = await SharedPreferences.getInstance();
     final carritoMap = await obtenerCarrito();
 
     if (carritoMap.containsKey(publicacionId)) {
       final item = carritoMap[publicacionId]!;
-      // Se valida que no se pueda añadir más cantidad que el stock disponible.
+      //verifica que no se exceda el stock disponible
       if (item.cantidadEnCarrito < item.stock) {
         item.cantidadEnCarrito++;
         final Map<String, dynamic> carritoJson = carritoMap.map(
@@ -102,7 +97,7 @@ class CarritoService {
     }
   }
 
-  // Decrementa la cantidad de un producto en el carrito.
+  //decrementa la cantidad de un producto en el carrito
   Future<void> decrementarCantidad(String publicacionId) async {
     final prefs = await SharedPreferences.getInstance();
     final carritoMap = await obtenerCarrito();
@@ -116,7 +111,7 @@ class CarritoService {
         );
         await prefs.setString(_key, json.encode(carritoJson));
       } else {
-        // Si la cantidad es 1, al decrementar se elimina el producto del carrito.
+        //si la cantidad es 1 y se decrementa se elimina el producto del carrito esto evita cantidades negativas y simula el d temu
         await eliminarDelCarrito(publicacionId);
       }
     }

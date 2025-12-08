@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'dart:typed_data'; // Necesario para manejar bytes de imagen (compatible con web)
-import 'package:image_picker/image_picker.dart'; // Paquete necesario para seleccionar imágenes
-import '../services/ia_service.dart'; // Importamos el servicio de IA que creamos
-import 'package:flutter_markdown/flutter_markdown.dart'; // Paquete para renderizar Markdown
+import 'dart:typed_data'; //para manejo d bytes d iamgenes como ya mencione
+import 'package:image_picker/image_picker.dart';
+import '../services/ia_service.dart';
+import 'package:flutter_markdown/flutter_markdown.dart'; //este paquete renderiza markdown
 
 class IAReconocimientoScreen extends StatefulWidget {
   const IAReconocimientoScreen({super.key});
@@ -12,24 +12,20 @@ class IAReconocimientoScreen extends StatefulWidget {
 }
 
 class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
-  // Almacenamos los bytes de la imagen para compatibilidad con web y móvil
   Uint8List? _imageBytes;
-  // Estado para mostrar el resultado del análisis
   String _analysisResult =
       'Sube una foto de la autoparte para comenzar el análisis de Neumatik AI.';
 
   bool _isLoading = false;
 
   final ImagePicker _picker = ImagePicker();
-  final IAService _iaService =
-      IAService(); // Instanciamos nuestro servicio de IA
+  final IAService _iaService = IAService();
 
-  // 1. Función para seleccionar la imagen
+  //funcion d seleccion d imagenes
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
 
     if (image != null) {
-      // Leemos los bytes de la imagen para la vista previa y el envío a la IA
       final bytes = await image.readAsBytes();
       setState(() {
         _imageBytes = bytes;
@@ -39,12 +35,11 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
     }
   }
 
-  // 3. Nueva función para tomar una foto con la cámara
+  //esta funcion sirve para tomar fotos con la camara
   Future<void> _takePicture() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.camera);
 
     if (image != null) {
-      // Leemos los bytes de la imagen para la vista previa y el envío a la IA
       final bytes = await image.readAsBytes();
       setState(() {
         _imageBytes = bytes;
@@ -54,7 +49,7 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
     }
   }
 
-  // 2. Función para enviar la imagen al modelo de IA
+  //funcion para enviar imagen
   Future<void> _analyzeImage() async {
     if (_imageBytes == null) {
       setState(() {
@@ -69,7 +64,7 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
     });
 
     try {
-      // Volvemos a la llamada única y simple.
+      //llamada unica y simplificada
       final specificResult = await _iaService.analizarImagen(_imageBytes!);
       setState(() {
         _analysisResult = specificResult;
@@ -94,9 +89,9 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Sección de la Imagen Seleccionada o Placeholder
             Container(
-              height: 350, // <-- Aumentamos la altura del visor de la imagen
+              height:
+                  350, //aqui si a futuro quiero CAMBIAR TAMAÑO IMAGEN (no abusar)
               decoration: BoxDecoration(
                 color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(12),
@@ -126,10 +121,10 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
 
             const SizedBox(height: 20),
 
-            // Botones para seleccionar imagen (Galería y Cámara)
+            //por ultimo botones
             Row(
               children: [
-                // Botón para Galería
+                //boton d galeria
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _pickImage,
@@ -146,10 +141,11 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                // Botón para Cámara
+                //boton camara
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: _takePicture, // Llamamos a la nueva función
+                    onPressed:
+                        _takePicture, //takePicture llama a la camara arriba mencionado
                     icon: const Icon(Icons.camera_alt),
                     label: const Text('Cámara'),
                     style: ElevatedButton.styleFrom(
@@ -167,7 +163,7 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
 
             const SizedBox(height: 16),
 
-            // Botón para iniciar el análisis
+            //y finalmente boton para iniciar el analisis
             ElevatedButton.icon(
               onPressed: _isLoading ? null : _analyzeImage,
               icon: _isLoading
@@ -197,7 +193,7 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
 
             const SizedBox(height: 30),
 
-            // Sección de Resultados
+            //resultados
             const Text(
               'Resultados del Análisis IA:',
               style: TextStyle(
@@ -214,9 +210,10 @@ class _IAReconocimientoScreenState extends State<IAReconocimientoScreen> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: MarkdownBody(
-                // Usamos MarkdownBody para renderizar el formato de la IA
+                //markdownBody para renderizar el formato de la IA
                 data: _analysisResult,
-                selectable: true, // Permite al usuario copiar el texto
+                selectable:
+                    true, //esto deja copiar lo q puso la IA importante para cambiar modificar eliminar
                 styleSheet: MarkdownStyleSheet(
                   p: const TextStyle(fontSize: 14),
                 ),

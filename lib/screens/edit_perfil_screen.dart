@@ -61,7 +61,7 @@ class _EditPerfilScreenState extends State<EditPerfilScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        // Vuelve a la pantalla de perfil y la recarga.
+        //devuelve a la pantalla de perfil y la recarga
         Navigator.of(context).popUntil(ModalRoute.withName('/home'));
         Navigator.of(context).pushNamed('/perfil');
       }
@@ -117,7 +117,7 @@ class _EditPerfilScreenState extends State<EditPerfilScreen> {
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 16),
-              // El correo no se puede editar por seguridad
+              //sin edicion d correo o contraseña ya luego veo eso m da pereza
               TextFormField(
                 initialValue: widget.perfil['correo'],
                 decoration: const InputDecoration(

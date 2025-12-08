@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import 'mis_publicaciones_screen.dart'; // Importamos la nueva pantalla
+import 'mis_publicaciones_screen.dart';
 
-// RUTA ASIGNADA: '/perfil'
-// FUNCIÓN: Dashboard para gestión de perfil, historial y publicaciones (vendedor).
+//ruta: "/perfil"
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
 
@@ -25,7 +24,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
     try {
       await _authService.logout();
       if (mounted) {
-        // Navega a la pantalla de login y elimina todas las rutas anteriores.
+        //asegura que el widget sigue
         Navigator.of(
           context,
         ).pushNamedAndRemoveUntil('/login', (route) => false);
@@ -44,7 +43,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // SOLUCIÓN: El FutureBuilder ahora envuelve todo el Scaffold.
+    //construye el widget
     return FutureBuilder<Map<String, dynamic>>(
       future: _userProfileFuture,
       builder: (context, snapshot) {
@@ -67,24 +66,22 @@ class _PerfilScreenState extends State<PerfilScreen> {
           );
         }
 
-        // Ahora los datos vienen dentro de la clave 'user' para ser consistentes.
+        //datos del perfil
         final perfil = snapshot.data!['user'] as Map<String, dynamic>;
 
-        // Se construye el Scaffold aquí, cuando ya tenemos los datos.
+        //scaffold principal de la pantalla de perfil
         return Scaffold(
           appBar: AppBar(
             title: const Text('Mi Perfil'),
             backgroundColor: Colors.teal,
             actions: [
-              // Ahora el botón SÍ puede ver la variable 'snapshot'.
               IconButton(
                 icon: const Icon(Icons.edit),
                 onPressed: () {
                   Navigator.pushNamed(
                     context,
                     '/edit-perfil',
-                    arguments:
-                        perfil, // Pasamos el mapa del perfil directamente.
+                    arguments: perfil, //pasamos los datos actuales del perfil
                   );
                 },
               ),
@@ -139,8 +136,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   ),
                 ),
               ),
-
-              // SOLUCIÓN: Sección "Mis Publicaciones" solo para vendedores.
               if (perfil['es_vendedor'] == true)
                 Card(
                   elevation: 2,
@@ -153,7 +148,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
                     subtitle: const Text('Gestiona tus productos a la venta'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
-                      // CORRECCIÓN: Usamos la ruta con nombre definida en main.dart
                       Navigator.pushNamed(context, '/mis-publicaciones');
                     },
                   ),

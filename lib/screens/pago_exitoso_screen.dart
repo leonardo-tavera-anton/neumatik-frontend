@@ -1,18 +1,18 @@
 // lib/screens/pago_exitoso_screen.dart
 import 'package:flutter/material.dart';
-import '../models/pedido.dart'; // Importamos el modelo Pedido
+import '../models/pedido.dart';
 
 class PagoExitosoScreen extends StatelessWidget {
   const PagoExitosoScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Obtenemos el objeto Pedido pasado como argumento desde la pantalla del carrito.
+    //obtenemos el pedido de los argumentos
     final Pedido pedido;
     try {
       pedido = ModalRoute.of(context)!.settings.arguments as Pedido;
     } catch (e) {
-      // Fallback por si se llega a esta pantalla sin un pedido.
+      //manejo de error si no se pasa el pedido
       return Scaffold(
         appBar: AppBar(title: const Text('Error')),
         body: const Center(
@@ -25,7 +25,7 @@ class PagoExitosoScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Compra Exitosa'),
         backgroundColor: Colors.teal,
-        automaticallyImplyLeading: false, // Oculta el botón de "atrás"
+        automaticallyImplyLeading: false, //elimina el boton de volver
       ),
       body: Center(
         child: Padding(
@@ -62,7 +62,7 @@ class PagoExitosoScreen extends StatelessWidget {
               const SizedBox(height: 40),
               ElevatedButton(
                 onPressed: () {
-                  // Navega a la pantalla de inicio y elimina todas las rutas anteriores.
+                  //volver al inicio
                   Navigator.of(
                     context,
                   ).pushNamedAndRemoveUntil('/home', (route) => false);

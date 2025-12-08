@@ -1,9 +1,9 @@
 import 'dart:io';
-import 'dart:typed_data'; // Necesario para leer los bytes de la imagen
-import 'package:flutter/services.dart'; // Importamos para usar los formateadores de texto
+import 'dart:typed_data'; //importamos dado q es necesario para leer los bytes de la imagen
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../services/ia_service.dart'; // SOLUCIÓN: Importamos el servicio de IA.
+import '../services/ia_service.dart';
 import '../services/publicacion_service.dart';
 
 class CrearPublicacionScreen extends StatefulWidget {
@@ -16,26 +16,26 @@ class CrearPublicacionScreen extends StatefulWidget {
 class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _publicacionService = PublicacionService();
-  final _iaService = IAService(); // SOLUCIÓN: Instanciamos el servicio de IA.
+  final _iaService = IAService(); //instanciamos servicios
 
-  // Controladores para los campos del formulario
+  //controladores
   final _nombreController = TextEditingController();
   final _precioController = TextEditingController();
   final _stockController = TextEditingController();
   final _descripcionController = TextEditingController();
   final _oemController = TextEditingController();
 
-  // Variables para la imagen y los dropdowns
+  //variables para la imagen y los dropdowns
   File? _imagenSeleccionada;
-  Uint8List? _imagenEnBytes; // Para la vista previa en web y móvil
-  String? _nombreArchivo; // Para la subida
+  Uint8List? _imagenEnBytes; //para la vista previa en web y movil
+  String? _nombreArchivo; //importante al momento d subir
   String _condicionSeleccionada = 'Nuevo';
-  int _categoriaSeleccionada = 1; // Default a 'Frenos'
-  // SOLUCIÓN: Se añade la variable para el dropdown de ciudad, con un valor por defecto.
-  String _ciudadSeleccionada = 'Lima';
+  int _categoriaSeleccionada = 1; //como default esta en "frenos"
+  String _ciudadSeleccionada =
+      'Lima'; //y aqui tmb ciudad en este caso por defecto "lima"
 
   bool _isLoading = false;
-  // SOLUCIÓN: Añadimos un estado de carga específico para la IA.
+  //definitos tipo d carga booleana a la ia
   bool _isAnalyzing = false;
 
   @override
@@ -53,8 +53,8 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
-      // Leemos los bytes de la imagen para la vista previa (compatible con web)
-      final bytes = await pickedFile.readAsBytes();
+      final bytes = await pickedFile
+          .readAsBytes(); //se leen bytes de la imagen para la vista previa (para web)
       setState(() {
         _imagenSeleccionada = File(pickedFile.path);
         _nombreArchivo = pickedFile.name;
@@ -63,7 +63,7 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
     }
   }
 
-  // SOLUCIÓN: Nueva función para analizar la imagen y rellenar los campos.
+  //_analizarYCompletar declaramos funcion para analizar la imagen y rellenar los campos.
   Future<void> _analizarYCompletar() async {
     if (_imagenEnBytes == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -77,7 +77,7 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
     setState(() => _isAnalyzing = true);
 
     try {
-      // SOLUCIÓN: Llamamos al nuevo método específico para esta pantalla.
+      //trycatch q llama a la funcion d analizar
       final analysis = await _iaService.analizarParaCrear(_imagenEnBytes!);
       _parseAndFillForm(analysis);
     } catch (e) {
@@ -93,7 +93,7 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
     }
   }
 
-  // SOLUCIÓN: Función para parsear la respuesta de la IA y rellenar el formulario.
+  //funcion para parsear la respuesta de la IA y rellenar el formulario.
   void _parseAndFillForm(String analysis) {
     final lines = analysis.split('\n');
     final validConditions = ['Nuevo', 'Usado', 'Reacondicionado'];
@@ -130,10 +130,12 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
         } else if (key == 'Descripción corta' && value.isNotEmpty) {
           _descripcionController.text = value;
         } else if (key == 'Precio estimado (S/)' && value.isNotEmpty) {
-          // Tomamos el primer número del rango como sugerencia.
           _precioController.text = value
               .split('-')[0]
-              .replaceAll(RegExp(r'[^0-9.]'), '')
+              .replaceAll(
+                RegExp(r'[^0-9.]'),
+                '',
+              ) //esto toma el primer · del rango como sugerencia
               .trim();
         }
       }
@@ -142,7 +144,7 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
 
   Future<void> _submitPublicacion() async {
     if (!_formKey.currentState!.validate()) {
-      return; // Si el formulario no es válido, no hacer nada.
+      return; //condicional para no hacer nd si no encuentra
     }
 
     if (_imagenSeleccionada == null) {
@@ -160,21 +162,20 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // 1. Subir la imagen al servidor de imágenes y obtener la URL
+      //trycath d la imagen al servidor de imagenes y obtener la url
       final fotoUrl = await _publicacionService.uploadImage(
         _imagenEnBytes!,
         _nombreArchivo!,
       );
 
       await _publicacionService.crearPublicacion(
-        // 2. Crear la publicación en tu backend usando la URL obtenida
+        //crea la publicación en tu backend usando la URL obtenida
         nombreParte: _nombreController.text,
         idCategoria: _categoriaSeleccionada,
         precio: double.parse(_precioController.text),
         condicion: _condicionSeleccionada,
         stock: int.parse(_stockController.text),
-        ubicacionCiudad:
-            _ciudadSeleccionada, // SOLUCIÓN: Se usa el valor del dropdown.
+        ubicacionCiudad: _ciudadSeleccionada, //valor del dropdown.
         numeroOem: _oemController.text,
         descripcionCorta: _descripcionController.text,
         fotoUrl: fotoUrl,
@@ -187,7 +188,7 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.of(context).pop(); // Volver a la pantalla anterior
+        Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {
@@ -207,8 +208,7 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
     }
   }
 
-  // SOLUCIÓN: Se añade la lista de ciudades para el dropdown.
-  // SOLUCIÓN: Se amplía la lista para que coincida con los filtros de búsqueda.
+  //busqueda
   List<String> _getCiudadesPrincipales() {
     return [
       'Lima',
@@ -248,7 +248,7 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Selector de Imagen
+              //selector de imagen
               GestureDetector(
                 onTap: _seleccionarImagen,
                 child: Container(
@@ -262,8 +262,6 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
                   child: _imagenEnBytes != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          // SOLUCIÓN: Se elimina el Image.file duplicado y se deja solo Image.memory,
-                          // que funciona tanto en móvil como en web.
                           child: Image.memory(
                             _imagenEnBytes!,
                             fit: BoxFit.cover,
@@ -285,8 +283,8 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
               ),
               const SizedBox(height: 20),
 
-              // SOLUCIÓN: Botón para analizar con IA, solo visible si hay una imagen.
-              if (_imagenEnBytes != null)
+              //boton para analizar con IA y es solo visible si se carga imagen
+              if (_imagenEnBytes != null) //condicion
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20.0),
                   child: ElevatedButton.icon(
@@ -310,7 +308,7 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
                   ),
                 ),
 
-              // Campos de texto
+              //todos los campos de texto
               TextFormField(
                 controller: _nombreController,
                 decoration: const InputDecoration(
@@ -328,7 +326,7 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                // SOLUCIÓN: Solo permite números y un punto decimal.
+                //solo permite numeros y punto decimal!!!
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
                 ],
@@ -349,7 +347,7 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
                   labelText: 'Cantidad en Stock',
                 ),
                 keyboardType: TextInputType.number,
-                // SOLUCIÓN: Solo permite dígitos enteros.
+                //solo digitos enteros
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 validator: (v) {
                   if (v == null || v.isEmpty) {
@@ -375,7 +373,7 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Dropdowns
+              //dropdowns
               DropdownButtonFormField<String>(
                 value: _condicionSeleccionada,
                 items: ['Nuevo', 'Usado', 'Reacondicionado']
@@ -389,7 +387,6 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
               ),
               const SizedBox(height: 20),
 
-              // SOLUCIÓN: Se reemplaza el campo de texto de ciudad por un Dropdown.
               DropdownButtonFormField<String>(
                 value: _ciudadSeleccionada,
                 items: _getCiudadesPrincipales()
@@ -406,8 +403,7 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
                 validator: (v) => v == null ? 'La ciudad es obligatoria' : null,
               ),
               const SizedBox(height: 20),
-              // NOTA: Este Dropdown de categorías debería llenarse desde la DB.
-              // Por ahora, se usan valores fijos basados en tu script SQL.
+              //dropdown de categorias tendria q llenarse desde la db pero solo usan valores fijos basados en sql d pgadmin4.
               DropdownButtonFormField<int>(
                 value: _categoriaSeleccionada,
                 items: const [

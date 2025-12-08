@@ -24,7 +24,7 @@ class Publicacion {
   });
 
   factory Publicacion.fromJson(Map<String, dynamic> json) {
-    // Manejo de la lista de fotos si viene en el JSON
+    //llamado d la lista dsd el json
     final List<dynamic>? fotosJson = json['fotos'] as List<dynamic>?;
     final List<FotoPublicacion> fotosList = fotosJson != null
         ? fotosJson
@@ -34,12 +34,15 @@ class Publicacion {
 
     return Publicacion(
       publicacionId: json['id'] as String,
-      // Asume que la API devuelve el nombre del producto o usa un default
-      nombreParte: json['nombre_parte'] as String? ?? 'Autoparte',
+
+      nombreParte:
+          json['nombre_parte'] as String? ??
+          'Autoparte', //espera q el api devuelve el nombre del producto o un valor por defecto
       descripcionCorta:
           json['descripcion_corta'] as String? ?? 'Sin descripción.',
-      // Conversión segura de precio (String/Num -> double)
-      precio: double.parse(json['precio'].toString()),
+      precio: double.parse(
+        json['precio'].toString(),
+      ), //conversión segura de precio a double
       fotoPrincipalUrl:
           json['foto_principal_url'] as String? ??
           'https://via.placeholder.com/150',

@@ -3,8 +3,8 @@ import '../models/publicacion_autoparte.dart';
 import '../services/auth_service.dart';
 import '../services/publicacion_service.dart';
 
-// RUTA ASIGNADA: '/' (Ruta inicial)
-// FUNCIÓN: Muestra el catálogo principal de autopartes.
+//ruta: '/' (la q sera base)
+//mostrando catalogo d autopartes
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -13,20 +13,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Usamos el servicio de publicaciones correcto.
   final PublicacionService _publicacionService = PublicacionService();
-  // SOLUCIÓN: Se añade el servicio de autenticación para verificar el rol del usuario.
   final AuthService _authService = AuthService();
-  // Mantenemos una lista completa y una lista filtrada en el estado.
   List<PublicacionAutoparte> _allPublicaciones = [];
   List<PublicacionAutoparte> _filteredPublicaciones = [];
   bool _isLoading = true;
   String? _error;
 
-  // Controladores y variables para la búsqueda y filtros
+  //controladores con sus variables necesaras
   final TextEditingController _searchController = TextEditingController();
   String? _selectedCategoria;
-  String? _selectedCiudad; // SOLUCIÓN: Variable para el dropdown de ciudad.
+  String? _selectedCiudad;
   String? _selectedCondicion;
   final TextEditingController _minPrecioController = TextEditingController();
   final TextEditingController _maxPrecioController = TextEditingController();
@@ -51,23 +48,21 @@ class _HomeScreenState extends State<HomeScreen> {
     await _reloadData();
   }
 
-  // Función para recargar los datos con RefreshIndicator
+  //funcion para recargar los datos con refresh indicator
   Future<void> _reloadData() async {
-    // Para evitar un parpadeo, solo mostramos el indicador de carga si no es la carga inicial.
     if (!_isLoading) {
-      setState(
-        () {},
-      ); // Reconstruye para mostrar el indicador de RefreshIndicator
+      //esto es para evitar un parpadeo
+      setState(() {}); //RefreshIndicator
     }
     try {
-      // SIMPLIFICACIÓN: Solo necesitamos cargar las publicaciones.
+      //y luego sololo cargamos las publicaciones
       final publications = await _publicacionService.getPublicacionesActivas();
 
       setState(() {
         _allPublicaciones = publications;
         _filteredPublicaciones = publications;
         _isLoading = false;
-        _error = null; // Limpiamos errores previos si la carga es exitosa
+        _error = null; //para verificar todo fue bien
       });
     } catch (e) {
       setState(() {
@@ -77,11 +72,11 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Lógica central para aplicar todos los filtros y la búsqueda
+  //logica d aplicar busqueda y filtros
   void _applyFiltersAndSearch() {
     List<PublicacionAutoparte> tempFilteredList = _allPublicaciones;
 
-    // 1. Filtro de búsqueda por texto
+    //por texto
     final searchQuery = _searchController.text.toLowerCase();
     if (searchQuery.isNotEmpty) {
       tempFilteredList = tempFilteredList.where((p) {
@@ -89,28 +84,28 @@ class _HomeScreenState extends State<HomeScreen> {
       }).toList();
     }
 
-    // 2. Filtro por categoría
+    //por categoria
     if (_selectedCategoria != null) {
       tempFilteredList = tempFilteredList.where((p) {
         return p.categoria == _selectedCategoria;
       }).toList();
     }
 
-    // 3. Filtro por condición
+    //por condicion
     if (_selectedCondicion != null) {
       tempFilteredList = tempFilteredList.where((p) {
         return p.condicion == _selectedCondicion;
       }).toList();
     }
 
-    // 4. Filtro por ciudad
+    //por ciudad
     if (_selectedCiudad != null) {
       tempFilteredList = tempFilteredList.where((p) {
         return p.ubicacionCiudad == _selectedCiudad;
-      }).toList(); // Comparamos exactamente con la ciudad seleccionada.
+      }).toList();
     }
 
-    // 5. Filtro por precio mínimo
+    //por precio minimo
     final minPrecio = double.tryParse(_minPrecioController.text);
     if (minPrecio != null) {
       tempFilteredList = tempFilteredList.where((p) {
@@ -118,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }).toList();
     }
 
-    // 6. Filtro por precio máximo
+    //por precio maximo
     final maxPrecio = double.tryParse(_maxPrecioController.text);
     if (maxPrecio != null) {
       tempFilteredList = tempFilteredList.where((p) {
@@ -131,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // Limpia todos los filtros y la búsqueda
+  //para limpiar todos los filtros
   void _clearFilters() {
     _searchController.clear();
     _minPrecioController.clear();
@@ -139,25 +134,23 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _selectedCategoria = null;
       _selectedCondicion = null;
-      _selectedCiudad = null; // SOLUCIÓN: Limpiamos la ciudad seleccionada.
+      _selectedCiudad = null;
       _filteredPublicaciones = _allPublicaciones;
     });
-    Navigator.pop(context); // Cierra el BottomSheet
+    Navigator.pop(context); //ccierra el bottomsheet
   }
 
-  // Aplica los filtros del BottomSheet
+  //igual aqui aplica los filtros
   void _applyFiltersFromSheet() {
     _applyFiltersAndSearch();
-    Navigator.pop(context); // Cierra el BottomSheet
+    Navigator.pop(context); //y aqui se cierra el bottomsheet
   }
 
-  // Extrae las categorías únicas de las publicaciones
+  //categorias
   List<String> _getUniqueCategories() {
     return _allPublicaciones.map((p) => p.categoria).toSet().toList();
   }
 
-  // SOLUCIÓN: Lista de las principales ciudades de Perú.
-  // SOLUCIÓN: Se amplía la lista de ciudades para incluir más centros urbanos importantes.
   List<String> _getCiudadesPrincipales() {
     return [
       'Lima',
@@ -180,18 +173,16 @@ class _HomeScreenState extends State<HomeScreen> {
       'Sullana',
       'Tacna',
       'Tumbes',
-    ]..sort(); // Las ordenamos alfabéticamente.
+    ]..sort(); //para ordenar alfabeticamente
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // SOLUCIÓN: Se restaura el título centrado "Neumatik".
         title: const Text('Neumatik'),
         centerTitle: true,
         backgroundColor: Colors.teal,
-        // SOLUCIÓN: La barra de búsqueda se coloca en la parte inferior del AppBar.
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60.0),
           child: Padding(
@@ -222,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
             tooltip: 'Filtros',
             onPressed: () => _showFilterSheet(context),
           ),
-          // SOLUCIÓN: Se reincorpora el botón de acceso al reconocimiento por IA.
+          //boton reconocimiento por IA
           IconButton(
             icon: const Icon(Icons.camera_alt_outlined),
             tooltip: 'Reconocimiento por IA',
@@ -239,7 +230,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      drawer: const AppDrawer(), // SOLUCIÓN: Se restaura el menú lateral.
+      drawer:
+          const AppDrawer(), //drawer menu lateral para mas comodidad y q se vea estetico
       body: RefreshIndicator(
         onRefresh: _reloadData,
         color: Colors.teal,
@@ -279,12 +271,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
       ),
-      // MEJORA: Botón flotante para crear nuevas publicaciones.
-      // Es un estándar de UX en apps móviles.
-      // SIMPLIFICACIÓN: El botón "Vender" ahora es visible para todos.
+      //boton flotante para crear publicacion
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.pushNamed(context, '/crear-publicacion');
+        onPressed: () async {
+          //recargamos para q muestre datos
+          await Navigator.pushNamed(context, '/crear-publicacion');
+          _reloadData();
         },
         label: const Text('Vender'),
         icon: const Icon(Icons.add_circle_outline),
@@ -294,13 +286,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Muestra el panel de filtros
+  //show filter osea muestra los filtros
   void _showFilterSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // Permite que el sheet sea más alto
+      isScrollControlled: true,
       builder: (context) {
-        // Usamos un StatefulBuilder para que los cambios en los dropdowns se reflejen dentro del sheet
+        //y finalmente usamos un Stateful Builder para que los cambios en los dropdowns se reflejen dentro del sheet
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
             return Padding(
@@ -324,7 +316,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const Divider(height: 20),
 
-                    // Filtro por Categoría
+                    //por categoria
                     DropdownButtonFormField<String>(
                       value: _selectedCategoria,
                       hint: const Text('Seleccionar Categoría'),
@@ -339,7 +331,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Filtro por Condición
+                    //por condicion
                     DropdownButtonFormField<String>(
                       value: _selectedCondicion,
                       hint: const Text('Seleccionar Condición'),
@@ -354,8 +346,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Filtro por Ciudad
-                    // SOLUCIÓN: Reemplazamos el TextFormField por un Dropdown.
+                    //por ciudad
                     DropdownButtonFormField<String>(
                       value: _selectedCiudad,
                       hint: const Text('Seleccionar Ciudad'),
@@ -370,7 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Filtro por Precio
+                    //por precio
                     Row(
                       children: [
                         Expanded(
@@ -396,7 +387,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 30),
 
-                    // Botones de Acción
+                    //y botones d accion
                     Row(
                       children: [
                         Expanded(
@@ -426,7 +417,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// SOLUCIÓN: Se reincorpora el widget del menú lateral (Drawer) que fue eliminado por error.
+//drawer lateral
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
 
@@ -515,7 +506,7 @@ class _AppDrawerState extends State<AppDrawer> {
               Navigator.pushNamed(context, '/carrito');
             },
           ),
-          // SIMPLIFICACIÓN: La opción "Mis Publicaciones" ahora es visible para todos.
+          //para q se puedan visualizar las publicaciones
           ListTile(
             leading: const Icon(Icons.store_mall_directory_outlined),
             title: const Text('Mis Publicaciones'),
@@ -542,7 +533,7 @@ class _AppDrawerState extends State<AppDrawer> {
   }
 }
 
-// Widget para el diseño de cada tarjeta de autoparte
+//un widget para el diseño de cada tarjeta de autoparte
 class AutoparteCard extends StatelessWidget {
   final PublicacionAutoparte publicacion;
 
@@ -553,13 +544,12 @@ class AutoparteCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       elevation: 3,
-      clipBehavior: Clip
-          .antiAlias, // Recorta la imagen para que se ajuste a los bordes redondeados
+      clipBehavior: Clip.antiAlias, //ajuste a bordes redondeados
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Imagen del producto
+          //imagen d autoparte
           SizedBox(
             height: 180,
             width: double.infinity,
@@ -584,7 +574,7 @@ class AutoparteCard extends StatelessWidget {
               },
             ),
           ),
-          // Contenido de texto
+          //contenido de texto
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: Column(
@@ -601,7 +591,7 @@ class AutoparteCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'S/ ${publicacion.precio.toStringAsFixed(2)}', // CORRECCIÓN: Unificamos la moneda a Soles.
+                  'S/ ${publicacion.precio.toStringAsFixed(2)}',
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 20,

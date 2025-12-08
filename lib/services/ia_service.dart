@@ -2,39 +2,39 @@
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart'; // SOLUCIÓN: Importamos para especificar el tipo de contenido.
+import 'package:http_parser/http_parser.dart'; //para especificar el tipo de contenido
 import 'package:shared_preferences/shared_preferences.dart';
 
 class IAService {
-  // La URL base de tu backend.
-  static const String _baseUrl = 'https://neumatik-backend.up.railway.app';
+  static const String _baseUrl =
+      'https://neumatik-backend.up.railway.app'; //URL base del backend
 
   Future<String> analizarImagen(Uint8List imageBytes) async {
-    // 1. Obtenemos el token de autenticación del usuario.
+    //analiza la imagen enviada
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
     if (token == null) {
       throw Exception('No estás autenticado.');
     }
 
-    // 2. Apuntamos a nuestro nuevo endpoint seguro en el backend.
+    //preparamos la URL del endpoint
     final url = Uri.parse('$_baseUrl/api/ia/analizar-imagen');
 
     try {
-      // 3. Creamos una petición 'multipart' para enviar la imagen.
+      //preparamos la peticion multipart
       final request = http.MultipartRequest('POST', url)
         ..headers['Authorization'] = 'Bearer $token';
 
       final multipartFile = http.MultipartFile.fromBytes(
-        'image', // El nombre del campo debe coincidir con el del backend: upload.single('image')
+        'image', //nombre del campo esperado por el backend
         imageBytes,
-        filename: 'upload.jpg', // Un nombre de archivo genérico es suficiente.
-        // SOLUCIÓN: Especificamos explícitamente que estamos enviando una imagen JPEG.
+        filename: 'upload.jpg', //nombre del archivo
+        //especificamos el tipo de contenido
         contentType: MediaType('image', 'jpeg'),
       );
       request.files.add(multipartFile);
 
-      // 4. Enviamos la petición y obtenemos la respuesta.
+      //enviamos la peticion
       final streamResponse = await request.send();
       final response = await http.Response.fromStream(streamResponse);
 
@@ -42,8 +42,8 @@ class IAService {
         final responseData = json.decode(response.body);
         return responseData['analysis'] ?? 'No se recibió un análisis válido.';
       } else {
-        // SOLUCIÓN: Si la respuesta no es 200, intentamos decodificar el error.
-        // Si falla (porque es HTML), mostramos un error más claro.
+        //manejo de errores robusto
+        //si la respuesta no es json se captura el error y se muestra un mensaje claro
         try {
           final errorData = json.decode(response.body);
           throw Exception(errorData['message'] ?? 'Error del servidor.');
@@ -60,7 +60,7 @@ class IAService {
     }
   }
 
-  // SOLUCIÓN: Se mueve el método dentro de la clase IAService para corregir los errores.
+  //nuevo metodo para analizar imagen y crear autoparte
   Future<String> analizarParaCrear(Uint8List imageBytes) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
@@ -68,7 +68,7 @@ class IAService {
       throw Exception('No estás autenticado.');
     }
 
-    // Apuntamos al nuevo endpoint del backend.
+    //preparamos la URL del endpoint
     final url = Uri.parse('$_baseUrl/api/ia/analizar-para-crear');
 
     try {
@@ -90,8 +90,7 @@ class IAService {
         final responseData = json.decode(response.body);
         return responseData['analysis'] ?? 'No se recibió un análisis válido.';
       } else {
-        // SOLUCIÓN: Se añade un manejo de errores robusto.
-        // Si la respuesta no es JSON (es HTML), se captura el error y se muestra un mensaje claro.
+        //manejo de errores completo ahora si
         try {
           final errorData = json.decode(response.body);
           throw Exception(errorData['message'] ?? 'Error del servidor.');

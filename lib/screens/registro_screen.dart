@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart'; // El servicio actualizado
-import '../models/usuario.dart'; // Usamos el modelo Usuario
-import '../models/usuario_autenticado.dart'; // <<< FIX: Se añade esta importación para resolver el error de tipado de 'result.user'
+import '../services/auth_service.dart';
+import '../models/usuario.dart';
+import '../models/usuario_autenticado.dart';
 
 class RegistroScreen extends StatefulWidget {
   const RegistroScreen({super.key});
@@ -14,7 +14,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
   final _formKey = GlobalKey<FormState>();
   final AuthService _authService = AuthService();
 
-  // Controladores
+  //mismo controladores q coloco en todos lados
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _apellidoController = TextEditingController();
   final TextEditingController _correoController = TextEditingController();
@@ -34,8 +34,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
     super.dispose();
   }
 
-  // Se infiere que la función registerUser devuelve un UsuarioAutenticado,
-  // por eso result tiene acceso a .user.
+  //funcion para enviar el formulario
   void _submitRegistration() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -44,19 +43,17 @@ class _RegistroScreenState extends State<RegistroScreen> {
       });
 
       try {
-        // CORRECCIÓN Y FIX DEL WARNING: Tipamos explícitamente result como UsuarioAutenticado.
-        // Esto obliga al analizador a mantener el import de usuario_autenticado.dart.
+        //llama al servicio de auth para registrar
         final UsuarioAutenticado result = await _authService.registerUser(
           nombre: _nombreController.text.trim(),
           apellido: _apellidoController.text.trim(),
           correo: _correoController.text.trim(),
           contrasena: _contrasenaController.text,
-          // SIMPLIFICACIÓN: Enviamos el valor directamente. La DB ahora maneja los vacíos.
-          telefono: _telefonoController.text.trim(),
+          telefono: _telefonoController.text.trim(), //opcional
         );
 
-        // Registro exitoso, usamos el objeto Usuario devuelto
-        final Usuario newUser = result.user;
+        final Usuario newUser = result
+            .user; //si todo sale bien se deberia mostrar este mensaje de exito supuestamente pero no funciona ahora lo veo
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -68,14 +65,13 @@ class _RegistroScreenState extends State<RegistroScreen> {
             ),
           );
 
-          // Navegar a la pantalla principal después del registro
-          // Esto funciona gracias a las rutas definidas en main.dart
+          //redirige al home
           Navigator.of(
             context,
           ).pushNamedAndRemoveUntil('/home', (Route<dynamic> route) => false);
         }
       } catch (e) {
-        // Manejo de la excepción
+        //si hay error lo muestra aqui
         if (mounted) {
           setState(() {
             _errorMessage = e.toString().replaceFirst('Exception: ', '');
@@ -108,7 +104,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
               ),
               const SizedBox(height: 25),
 
-              // --- Campo Nombre ---
+              //campo nombre
               TextFormField(
                 controller: _nombreController,
                 decoration: const InputDecoration(
@@ -124,7 +120,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
               ),
               const SizedBox(height: 15),
 
-              // --- Campo Apellido ---
+              //campo apellido
               TextFormField(
                 controller: _apellidoController,
                 decoration: const InputDecoration(
@@ -134,14 +130,13 @@ class _RegistroScreenState extends State<RegistroScreen> {
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
                 ),
-                // SOLUCIÓN: Añadir validador para el apellido.
                 validator: (value) => value == null || value.isEmpty
                     ? 'El apellido es obligatorio.'
                     : null,
               ),
               const SizedBox(height: 15),
 
-              // --- Campo Correo ---
+              //campo correo
               TextFormField(
                 controller: _correoController,
                 keyboardType: TextInputType.emailAddress,
@@ -164,7 +159,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
               ),
               const SizedBox(height: 15),
 
-              // --- Campo Contraseña ---
+              //campo contraseña
               TextFormField(
                 controller: _contrasenaController,
                 obscureText: true,
@@ -181,7 +176,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
               ),
               const SizedBox(height: 15),
 
-              // --- Campo Teléfono ---
+              //campo telefono
               TextFormField(
                 controller: _telefonoController,
                 keyboardType: TextInputType.phone,
@@ -196,7 +191,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
 
               const SizedBox(height: 15),
 
-              // --- Mostrar Mensaje de Error ---
+              //mensaje d error solo si hay
               if (_errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 15.0),
@@ -210,7 +205,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                   ),
                 ),
 
-              // --- Botón de Registro ---
+              //boton registrar
               ElevatedButton.icon(
                 onPressed: _isLoading ? null : _submitRegistration,
                 icon: _isLoading
@@ -239,12 +234,12 @@ class _RegistroScreenState extends State<RegistroScreen> {
               ),
               const SizedBox(height: 20),
 
-              // --- Volver a Login ---
+              //volver al login
               TextButton(
                 onPressed: () {
                   Navigator.pop(
                     context,
-                  ); // Vuelve a la pantalla anterior (Login)
+                  ); //vuelve a la pantalla de login una vez registrado
                 },
                 child: Text(
                   '¿Ya tienes cuenta? Inicia Sesión',

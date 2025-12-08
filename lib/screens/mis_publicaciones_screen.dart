@@ -21,14 +21,13 @@ class _MisPublicacionesScreenState extends State<MisPublicacionesScreen> {
     _reloadData();
   }
 
-  // SOLUCIÓN: Función para (re)cargar los datos.
+  //misma funcion para recargar datos
   Future<void> _reloadData() async {
-    // Asigna el Future a la variable de estado para que el FutureBuilder se reconstruya.
     _misPublicacionesFuture = _publicacionService.getMisPublicaciones();
-    setState(() {}); // Notifica al widget que debe reconstruirse.
+    setState(() {});
   }
 
-  // SOLUCIÓN: Función para mostrar el diálogo de confirmación y eliminar.
+  //funcion para mostrar la confirmación y eliminar sus dialogos
   Future<void> _confirmarYEliminar(
     String publicacionId,
     String nombreParte,
@@ -36,7 +35,6 @@ class _MisPublicacionesScreenState extends State<MisPublicacionesScreen> {
     final bool? confirmar = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
-        // SOLUCIÓN: Se estiliza el AlertDialog para una mejor UX.
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15.0),
@@ -52,7 +50,7 @@ class _MisPublicacionesScreenState extends State<MisPublicacionesScreen> {
             '¿Estás seguro de que quieres eliminar la publicación "$nombreParte"? Esta acción no se puede deshacer.',
           ),
           actions: <Widget>[
-            // Botón para cancelar la acción.
+            //boton d cancelar
             OutlinedButton(
               child: const Text('Cancelar'),
               onPressed: () => Navigator.of(context).pop(false),
@@ -60,7 +58,7 @@ class _MisPublicacionesScreenState extends State<MisPublicacionesScreen> {
                 side: BorderSide(color: Colors.grey.shade400),
               ),
             ),
-            // Botón principal para confirmar la eliminación.
+            //boton para confirmar eliminacion
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(true),
               style: ElevatedButton.styleFrom(
@@ -85,7 +83,7 @@ class _MisPublicacionesScreenState extends State<MisPublicacionesScreen> {
             ),
           );
         }
-        _reloadData(); // Recarga la lista para que desaparezca el elemento.
+        _reloadData(); //recarga datos despues de eliminar
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -106,9 +104,9 @@ class _MisPublicacionesScreenState extends State<MisPublicacionesScreen> {
         title: const Text('Mis Publicaciones'),
         backgroundColor: Colors.teal,
       ),
-      // SOLUCIÓN: Envolvemos el cuerpo en un RefreshIndicator.
+      //el refresh indicator para recargar al deslizar
       body: RefreshIndicator(
-        onRefresh: _reloadData, // Llama a la función de recarga al deslizar.
+        onRefresh: _reloadData, //funcion para recargar
         color: Colors.teal,
         child: FutureBuilder<List<PublicacionAutoparte>>(
           future: _misPublicacionesFuture,
@@ -146,8 +144,7 @@ class _MisPublicacionesScreenState extends State<MisPublicacionesScreen> {
                   ),
                   child: ListTile(
                     leading: Image.network(
-                      publicacion
-                          .fotoPrincipalUrl, // CORRECCIÓN: El campo se llama fotoPrincipalUrl
+                      publicacion.fotoPrincipalUrl,
                       width: 50,
                       height: 50,
                       fit: BoxFit.cover,
@@ -158,7 +155,7 @@ class _MisPublicacionesScreenState extends State<MisPublicacionesScreen> {
                     subtitle: Text(
                       'S/ ${publicacion.precio.toStringAsFixed(2)}',
                     ),
-                    // SOLUCIÓN: Añadimos un botón de eliminar.
+                    //boton eliminar
                     trailing: IconButton(
                       icon: const Icon(Icons.delete_outline, color: Colors.red),
                       tooltip: 'Eliminar Publicación',
@@ -168,13 +165,11 @@ class _MisPublicacionesScreenState extends State<MisPublicacionesScreen> {
                       ),
                     ),
                     onTap: () {
-                      // Al tocar, navega a la pantalla de detalle.
-                      // Desde allí se podrá editar.
+                      //navigar a la pantalla de detalle de publicacion
                       Navigator.pushNamed(
                         context,
                         '/publicacion',
-                        arguments: publicacion
-                            .publicacionId, // CORRECCIÓN: El campo se llama publicacionId
+                        arguments: publicacion.publicacionId,
                       );
                     },
                   ),

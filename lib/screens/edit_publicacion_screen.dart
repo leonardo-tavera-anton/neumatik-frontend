@@ -18,7 +18,7 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _publicacionService = PublicacionService();
 
-  // Controladores para los campos del formulario
+  //los mismo controladores para los campos del formulario
   late TextEditingController _nombreController;
   late TextEditingController _precioController;
   late TextEditingController _stockController;
@@ -26,8 +26,7 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
   late TextEditingController _oemController;
 
   late String _condicionSeleccionada;
-  late String
-  _ciudadSeleccionada; // SOLUCIÓN: Variable para el dropdown de ciudad.
+  late String _ciudadSeleccionada; //dropdown de ciudad
   late int _categoriaSeleccionada;
 
   bool _isLoading = false;
@@ -35,7 +34,6 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
   @override
   void initState() {
     super.initState();
-    // Inicializamos los controladores con los datos de la publicación existente.
     _nombreController = TextEditingController(
       text: widget.publicacion.nombreParte,
     );
@@ -52,22 +50,20 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
       text: widget.publicacion.numeroOem ?? '',
     );
 
-    // SOLUCIÓN DEFINITIVA: Verificamos si la ciudad guardada existe en nuestra lista de ciudades.
-    // Si no existe (ej. "A" o un valor inválido), se asigna null para evitar el crash.
     final ciudadGuardada = widget.publicacion.ubicacionCiudad;
     if (_getCiudadesPrincipales().contains(ciudadGuardada)) {
       _ciudadSeleccionada = ciudadGuardada;
     } else {
       _ciudadSeleccionada =
-          _getCiudadesPrincipales()[0]; // Se asigna la primera ciudad de la lista como valor por defecto.
+          _getCiudadesPrincipales()[0]; //se verifica y se asigna la primera ciudad de la lista como valor por defecto esto 2 veces q salio mal en el commit
     }
     _condicionSeleccionada = widget.publicacion.condicion;
-    // NOTA: Esto asume que tienes una forma de mapear el nombre de la categoría a su ID.
-    // Para este ejemplo, lo dejaremos con un valor fijo si no se puede mapear.
-    _categoriaSeleccionada = _mapCategoriaToId(widget.publicacion.categoria);
+    _categoriaSeleccionada = _mapCategoriaToId(
+      widget.publicacion.categoria,
+    ); //para el "mapeo"
   }
 
-  // Función auxiliar para mapear el nombre de la categoría a su ID.
+  //y su auxiliar al momento d mapear los datos
   int _mapCategoriaToId(String nombreCategoria) {
     final categorias = {
       'Frenos': 1,
@@ -79,7 +75,7 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
       'Neumáticos y Ruedas': 7,
     };
     return categorias[nombreCategoria] ??
-        1; // Devuelve 1 (Frenos) si no lo encuentra.
+        1; //igual tmb asigno valor 1 como en crear publicacion q son los "frenos" solo para no olvidarme
   }
 
   @override
@@ -92,7 +88,7 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
     super.dispose();
   }
 
-  // SOLUCIÓN: Se añade la lista de ciudades para el dropdown.
+  //lista de ciudades para el dropdown.
   List<String> _getCiudadesPrincipales() {
     return [
       'Lima',
@@ -126,18 +122,15 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Llamamos a la nueva función para actualizar la publicación.
+      //llamamos a la nueva funcion para actualizar publicac
       await _publicacionService.updatePublicacion(
-        publicacionId: widget
-            .publicacion
-            .publicacionId, // CORRECCIÓN: El acceso correcto es widget.publicacion.publicacionId
+        publicacionId: widget.publicacion.publicacionId,
         nombreParte: _nombreController.text,
         idCategoria: _categoriaSeleccionada,
         precio: double.parse(_precioController.text),
         condicion: _condicionSeleccionada,
         stock: int.parse(_stockController.text),
-        ubicacionCiudad:
-            _ciudadSeleccionada, // SOLUCIÓN: Se usa el valor del dropdown.
+        ubicacionCiudad: _ciudadSeleccionada,
         numeroOem: _oemController.text,
         descripcionCorta: _descripcionController.text,
       );
@@ -149,7 +142,7 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        // Volver a la pantalla de "Mis Publicaciones" y recargarla.
+        //volver a las publicaciones y recargar todo waaaaaaa
         Navigator.of(context).popUntil(ModalRoute.withName('/home'));
         Navigator.of(context).pushNamed('/mis-publicaciones');
       }
@@ -185,7 +178,7 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // La imagen no se puede editar por ahora, solo se muestra.
+              //sin edicion d imagenes
               Image.network(
                 widget.publicacion.fotoPrincipalUrl,
                 height: 200,
@@ -193,7 +186,6 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Campos de texto (igual que en crear_publicacion_screen)
               TextFormField(
                 controller: _nombreController,
                 decoration: const InputDecoration(
@@ -242,7 +234,7 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Dropdowns
+              //dropdowns necesarios
               DropdownButtonFormField<String>(
                 value: _condicionSeleccionada,
                 items: ['Nuevo', 'Usado', 'Reacondicionado']
@@ -254,7 +246,7 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
               ),
               const SizedBox(height: 20),
 
-              // SOLUCIÓN: Se reemplaza el campo de texto de ciudad por un Dropdown.
+              //reemplazamos por una ciudad
               DropdownButtonFormField<String>(
                 value: _ciudadSeleccionada,
                 items: _getCiudadesPrincipales()

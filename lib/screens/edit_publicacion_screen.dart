@@ -236,7 +236,7 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
 
               //dropdowns necesarios
               DropdownButtonFormField<String>(
-                value: _condicionSeleccionada,
+                initialValue: _condicionSeleccionada,
                 items: ['Nuevo', 'Usado', 'Reacondicionado']
                     .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                     .toList(),
@@ -248,7 +248,7 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
 
               //reemplazamos por una ciudad
               DropdownButtonFormField<String>(
-                value: _ciudadSeleccionada,
+                initialValue: _ciudadSeleccionada,
                 items: _getCiudadesPrincipales()
                     .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                     .toList(),
@@ -263,7 +263,7 @@ class _EditPublicacionScreenState extends State<EditPublicacionScreen> {
               ),
               const SizedBox(height: 20),
               DropdownButtonFormField<int>(
-                value: _categoriaSeleccionada,
+                initialValue: _categoriaSeleccionada,
                 items: const [
                   DropdownMenuItem(value: 1, child: Text('Frenos')),
                   DropdownMenuItem(

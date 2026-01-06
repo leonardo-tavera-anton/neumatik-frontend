@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 
 // Modelo para una foto asociada a una Publicación
 class FotoPublicacion {

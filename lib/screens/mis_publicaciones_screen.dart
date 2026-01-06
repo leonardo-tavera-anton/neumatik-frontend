@@ -52,11 +52,11 @@ class _MisPublicacionesScreenState extends State<MisPublicacionesScreen> {
           actions: <Widget>[
             //boton d cancelar
             OutlinedButton(
-              child: const Text('Cancelar'),
               onPressed: () => Navigator.of(context).pop(false),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: Colors.grey.shade400),
               ),
+              child: const Text('Cancelar'),
             ),
             //boton para confirmar eliminacion
             ElevatedButton(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import 'mis_publicaciones_screen.dart';
 
 //ruta: "/perfil"
 class PerfilScreen extends StatefulWidget {

@@ -16,7 +16,7 @@ class _CarritoScreenState extends State<CarritoScreen> {
   final PedidoService _pedidoService = PedidoService();
 
   late Future<List<PublicacionAutoparte>> _carritoFuture;
-  bool _isProcessingPayment = false;
+  final bool _isProcessingPayment = false;
 
   @override
   void initState() {

@@ -318,7 +318,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     //por categoria
                     DropdownButtonFormField<String>(
-                      value: _selectedCategoria,
+                      initialValue: _selectedCategoria,
                       hint: const Text('Seleccionar Categoría'),
                       items: _getUniqueCategories()
                           .map(
@@ -333,7 +333,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     //por condicion
                     DropdownButtonFormField<String>(
-                      value: _selectedCondicion,
+                      initialValue: _selectedCondicion,
                       hint: const Text('Seleccionar Condición'),
                       items: ['Nuevo', 'Usado', 'Reacondicionado']
                           .map(
@@ -348,7 +348,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     //por ciudad
                     DropdownButtonFormField<String>(
-                      value: _selectedCiudad,
+                      initialValue: _selectedCiudad,
                       hint: const Text('Seleccionar Ciudad'),
                       items: _getCiudadesPrincipales()
                           .map(
@@ -521,10 +521,11 @@ class _AppDrawerState extends State<AppDrawer> {
             title: const Text('Cerrar Sesión'),
             onTap: () async {
               await _authService.logout();
-              if (mounted)
+              if (mounted) {
                 Navigator.of(
                   context,
                 ).pushNamedAndRemoveUntil('/login', (route) => false);
+              }
             },
           ),
         ],
@@ -537,7 +538,7 @@ class _AppDrawerState extends State<AppDrawer> {
 class AutoparteCard extends StatelessWidget {
   final PublicacionAutoparte publicacion;
 
-  const AutoparteCard({Key? key, required this.publicacion}) : super(key: key);
+  const AutoparteCard({super.key, required this.publicacion});
 
   @override
   Widget build(BuildContext context) {

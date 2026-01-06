@@ -5,7 +5,6 @@ import 'dart:io'; // esta importacio es necesaria para Socket Exception (para ma
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/usuario.dart';
 import '../models/usuario_autenticado.dart';
 
 class AuthService {

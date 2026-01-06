@@ -375,20 +375,21 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
 
               //dropdowns
               DropdownButtonFormField<String>(
-                value: _condicionSeleccionada,
+                initialValue: _condicionSeleccionada,
                 items: ['Nuevo', 'Usado', 'Reacondicionado']
                     .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                     .toList(),
                 onChanged: (value) {
-                  if (value != null)
+                  if (value != null) {
                     setState(() => _condicionSeleccionada = value);
+                  }
                 },
                 decoration: const InputDecoration(labelText: 'Condición'),
               ),
               const SizedBox(height: 20),
 
               DropdownButtonFormField<String>(
-                value: _ciudadSeleccionada,
+                initialValue: _ciudadSeleccionada,
                 items: _getCiudadesPrincipales()
                     .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                     .toList(),
@@ -405,7 +406,7 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
               const SizedBox(height: 20),
               //dropdown de categorias tendria q llenarse desde la db pero solo usan valores fijos basados en sql d pgadmin4.
               DropdownButtonFormField<int>(
-                value: _categoriaSeleccionada,
+                initialValue: _categoriaSeleccionada,
                 items: const [
                   DropdownMenuItem(value: 1, child: Text('Frenos')),
                   DropdownMenuItem(
@@ -422,8 +423,9 @@ class _CrearPublicacionScreenState extends State<CrearPublicacionScreen> {
                   ),
                 ],
                 onChanged: (value) {
-                  if (value != null)
+                  if (value != null) {
                     setState(() => _categoriaSeleccionada = value);
+                  }
                 },
                 decoration: const InputDecoration(labelText: 'Categoría'),
               ),

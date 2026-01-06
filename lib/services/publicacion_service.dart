@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/publicacion_autoparte.dart';
 import '../main.dart'; //importamos para usar navigatorKey
-import 'dart:io'; //para el manejo d archivos
+//para el manejo d archivos
 import 'dart:typed_data'; //para manejar bytes de imagenes
 
 class PublicacionService {
